@@ -99,6 +99,24 @@ function renderNews() {
     text.textContent = item.text;
 
     li.append(region, headline, text);
+
+    if (item.source) {
+      const source = document.createElement("p");
+      source.className = "news-source";
+      source.append("Quelle: ");
+      if (item.sourceUrl) {
+        const link = document.createElement("a");
+        link.href = item.sourceUrl;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = item.source;
+        source.appendChild(link);
+      } else {
+        source.append(item.source);
+      }
+      li.appendChild(source);
+    }
+
     list.appendChild(li);
   }
 }

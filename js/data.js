@@ -28,25 +28,34 @@ const QUOTES = [
 ];
 
 // --- Positive Nachrichten -------------------------------------------------
-// Format: { region: "…", emoji: "…", headline: "…", text: "1-2 Sätze" }
+// Format: { region, emoji, headline, text, source, sourceUrl }
+// Bitte nur Meldungen aus seriösen Quellen verwenden (z.B. ZEIT, Süddeutsche,
+// FAZ, ARD/tagesschau, ZDF, Reuters, dpa). source ist der Name des Mediums,
+// sourceUrl der Link zum Originalartikel (kann leer "" bleiben).
 // Tipp: Alte News einfach überschreiben, die Reihenfolge bestimmt die Anzeige.
 const NEWS = [
   {
     region: "Deutschland",
     emoji: "🇩🇪",
-    headline: "Mehr Grün in den Städten",
-    text: "Immer mehr deutsche Städte verwandeln alte Parkplätze in kleine Parks und Gemeinschaftsgärten – allein im letzten Jahr entstanden Hunderte neue grüne Oasen.",
+    headline: "Überlebenschancen bei Krebs steigen",
+    text: "Die Chancen, eine Krebserkrankung zu überleben, verbessern sich laut Robert Koch-Institut stetig: Die Sterberaten sind in den letzten 25 Jahren deutlich gesunken – bei Männern um rund 31, bei Frauen um rund 21 Prozent.",
+    source: "ZDFheute",
+    sourceUrl: "https://www.zdfheute.de/wissen/krebs-rki-zahlen-ueberleben-gesundheit-100.html",
   },
   {
     region: "Europa",
     emoji: "🇪🇺",
-    headline: "Rekord bei erneuerbaren Energien",
-    text: "In Europa stammt inzwischen fast die Hälfte des Stroms aus erneuerbaren Quellen – so viel wie nie zuvor.",
+    headline: "Rekord bei Strom aus Erneuerbaren",
+    text: "Fast die Hälfte des Stroms in der EU stammt inzwischen aus erneuerbaren Energien: 2024 lag der Anteil laut einer Ember-Analyse bei rekordhohen 47,5 Prozent – vor allem dank des starken Solar-Ausbaus.",
+    source: "ZDFheute",
+    sourceUrl: "https://www.zdfheute.de/wirtschaft/eu-erneuerbare-energie-stromanteil-100.html",
   },
   {
     region: "Welt",
     emoji: "🌍",
-    headline: "Comeback der Meeresschildkröten",
-    text: "Dank jahrzehntelanger Schutzprogramme erholen sich die Bestände vieler Meeresschildkröten weltweit deutlich – an manchen Stränden gibt es so viele Nester wie seit Jahrzehnten nicht.",
+    headline: "Die Ozonschicht erholt sich",
+    text: "Das Ozonloch über der Antarktis war 2024 so klein wie seit Jahren nicht und lag unter dem langjährigen Durchschnitt – ein Erfolg des weltweiten Verzichts auf ozonschädliche Stoffe wie FCKW.",
+    source: "ZDFheute",
+    sourceUrl: "https://www.zdfheute.de/wissen/klima-ozon-loch-kleiner-erholung-100.html",
   },
 ];

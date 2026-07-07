@@ -172,6 +172,17 @@ body {
   color: var(--text-soft);
 }
 
+.news-source {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-top: 0.45rem;
+  font-style: italic;
+}
+
+.news-source a {
+  color: var(--green-deep);
+}
+
 /* --- Atem-Kreis ---------------------------------------------------------------- */
 .breathe-intro {
   font-size: 0.93rem;

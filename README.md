@@ -43,10 +43,14 @@ In `js/data.js` die Liste `NEWS` bearbeiten. Jeder Eintrag:
   emoji: "🇩🇪",                  // kleines Icon vor dem Label
   headline: "Kurze Überschrift",
   text: "Die eigentliche Nachricht in 1-2 Sätzen.",
+  source: "ZDFheute",           // Name des Mediums (wird als Quellenzeile angezeigt)
+  sourceUrl: "https://…",       // Link zum Originalartikel, "" wenn keiner da ist
 },
 ```
 
 Die Reihenfolge in der Liste bestimmt die Reihenfolge auf der Seite.
+Bitte nur Meldungen aus seriösen Quellen übernehmen (z.B. ZEIT, Süddeutsche,
+FAZ, ARD/tagesschau, ZDF, Reuters, dpa) und das Medium in `source` angeben.
 
 ### Tierbilder ändern
 
