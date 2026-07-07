@@ -19,6 +19,16 @@ const SEARCH_TERMS = [
   "baby panda",
   "baby otter",
   "baby penguin",
+  "baby elephant",
+  "baby giraffe",
+  "baby wombat",
+  "baby koala",
+  "baby kangaroo",
+  "baby lamb",
+  "baby seal",
+  "baby sloth",
+  "baby owl",
+  "baby goat",
 ];
 
 // --- Zitate & Sprüche ----------------------------------------------------
