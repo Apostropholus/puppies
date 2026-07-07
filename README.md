@@ -1,8 +1,9 @@
 # 🌴 Gute-Laune-Oase
 
 Eine kleine One-Page-Website, die für ein paar Sekunden gute Laune verbreitet:
-ein zufälliges Tierbild, ein positives Zitat, gute Nachrichten und eine
-4-7-8-Atemübung zum Runterkommen.
+ein zufälliges Tierbild, ein positives Zitat, gute Nachrichten, eine
+4-7-8-Atemübung zum Runterkommen, ein Komplimente-Generator und virtuelle
+Luftpolsterfolie zum Ploppen (mit Sound, komplett im Browser erzeugt).
 
 **Technik:** Reines HTML/CSS/JS – kein Backend, kein Login, kein Tracking,
 keine Speicherung von Nutzerdaten.
@@ -32,6 +33,15 @@ In `js/data.js` die Liste `QUOTES` bearbeiten. Jeder Eintrag sieht so aus:
 
 Bei jedem Seitenaufruf wird ein Zitat zufällig ausgewählt. Du kannst beliebig
 viele Einträge hinzufügen oder löschen.
+
+### Komplimente ändern
+
+In `js/data.js` die Liste `COMPLIMENTS` bearbeiten – ein Eintrag pro Zeile,
+einfach als String:
+
+```js
+"Dein neues Kompliment.",
+```
 
 ### News aktualisieren
 

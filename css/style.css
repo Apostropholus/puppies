@@ -56,25 +56,42 @@ body {
   font-size: clamp(1rem, 2.5vw, 1.15rem);
 }
 
-/* --- Grid-Layout ------------------------------------------------------------
-   Mobil: alles untereinander.
-   Ab 900px: Hero links (groß), News + Atemübung rechts gestapelt.          */
+/* --- Spalten-Layout -----------------------------------------------------------
+   Mobil: alles untereinander (die Spalten-Wrapper lösen sich per
+   display:contents auf, `order` bestimmt die Reihenfolge).
+   Ab 900px: zwei unabhängig fließende Spalten – Hero + Komplimente links,
+   News + Atemübung + Luftpolsterfolie rechts.                                 */
 .grid {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
   max-width: 60rem;
   margin: 0 auto;
 }
 
+.col {
+  display: contents;
+}
+
+.hero       { order: 1; }
+.news       { order: 2; }
+.breathe    { order: 3; }
+.compliment { order: 4; }
+.bubblewrap { order: 5; }
+
 @media (min-width: 900px) {
   .grid {
-    grid-template-columns: 3fr 2fr;
-    align-items: start;
+    flex-direction: row;
+    align-items: flex-start;
   }
-  .hero {
-    grid-row: span 2;
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
   }
+  .col-left  { flex: 3; }
+  .col-right { flex: 2; }
 }
 
 /* --- Karten ----------------------------------------------------------------- */
@@ -250,10 +267,89 @@ body {
 .btn:hover  { background: #68905f; transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 
+/* --- Komplimente-Generator ------------------------------------------------- */
+.compliment {
+  text-align: center;
+}
+
+.compliment-text {
+  font-size: clamp(1.05rem, 2.5vw, 1.2rem);
+  color: var(--text);
+  min-height: 3.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem 1rem;
+}
+
+.compliment-pop {
+  animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* --- Luftpolsterfolie --------------------------------------------------------- */
+.bubblewrap-intro {
+  font-size: 0.93rem;
+  color: var(--text-soft);
+  margin-bottom: 1.25rem;
+}
+
+.bubble-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.bubble {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(circle at 32% 28%, #e6f2f6, var(--sky) 65%, #9fc3cf);
+  box-shadow: inset -3px -5px 10px rgba(90, 130, 145, 0.35),
+              inset 4px 6px 10px rgba(255, 255, 255, 0.8),
+              0 3px 8px rgba(122, 96, 70, 0.15);
+  transition: transform 0.12s ease;
+}
+
+.bubble:hover:not(.popped) {
+  transform: scale(1.07);
+}
+
+.bubble.popped {
+  cursor: default;
+  background: #eee6da;
+  box-shadow: inset 2px 4px 8px rgba(122, 96, 70, 0.25);
+  animation: bubble-pop 0.22s ease-out;
+}
+
+@keyframes bubble-pop {
+  0%   { transform: scale(1.15); }
+  55%  { transform: scale(0.82); }
+  100% { transform: scale(1); }
+}
+
+.bubblewrap-status {
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  margin-top: 0.9rem;
+  min-height: 1.4em;
+}
+
 /* Reduzierte Bewegung respektieren */
 @media (prefers-reduced-motion: reduce) {
   .image-placeholder { animation: none; }
   .breathe-circle { transition-duration: 0.1s !important; }
+  .compliment-pop { animation: none; }
+  .bubble.popped { animation: none; }
+  .bubble:hover:not(.popped) { transform: none; }
 }
 
 /* --- Footer -------------------------------------------------------------------- */

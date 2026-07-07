@@ -178,9 +178,80 @@ function toggleBreathing() {
   runPhase(0);
 }
 
+// --- 6. Komplimente-Generator ----------------------------------------------
+let lastComplimentIndex = -1;
+
+function showCompliment() {
+  let index;
+  do {
+    index = Math.floor(Math.random() * COMPLIMENTS.length);
+  } while (index === lastComplimentIndex && COMPLIMENTS.length > 1);
+  lastComplimentIndex = index;
+
+  const el = document.getElementById("compliment-text");
+  el.classList.remove("compliment-pop");
+  void el.offsetWidth; // Reflow, damit die Animation erneut abspielt
+  el.textContent = COMPLIMENTS[index];
+  el.classList.add("compliment-pop");
+}
+
+// --- 7. Luftpolsterfolie ------------------------------------------------------
+const BUBBLE_COUNT = 9;
+let audioContext = null;
+
+function playPopSound() {
+  try {
+    audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === "suspended") audioContext.resume();
+    const now = audioContext.currentTime;
+
+    // Kurzer "Plopp": Sinuston mit schnellem Tonhöhen- und Lautstärkeabfall
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(320 + Math.random() * 160, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.09);
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+    osc.connect(gain).connect(audioContext.destination);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch {
+    // Ohne Audio (z.B. blockiert) ploppt es eben lautlos weiter
+  }
+}
+
+function buildBubbleWrap() {
+  const grid = document.getElementById("bubble-grid");
+  const status = document.getElementById("bubblewrap-status");
+  grid.innerHTML = "";
+  status.innerHTML = "&nbsp;";
+
+  for (let i = 0; i < BUBBLE_COUNT; i++) {
+    const bubble = document.createElement("button");
+    bubble.type = "button";
+    bubble.className = "bubble";
+    bubble.setAttribute("aria-label", "Luftpolster zerplatzen");
+    bubble.addEventListener("click", () => {
+      if (bubble.classList.contains("popped")) return;
+      bubble.classList.add("popped");
+      bubble.setAttribute("aria-label", "Zerplatzt");
+      playPopSound();
+
+      if (grid.querySelectorAll(".bubble.popped").length === BUBBLE_COUNT) {
+        status.textContent = "Alle geploppt! 🎉 Neue Folie kommt …";
+        setTimeout(buildBubbleWrap, 1600);
+      }
+    });
+    grid.appendChild(bubble);
+  }
+}
+
 // --- Start -----------------------------------------------------------------
 setGreeting();
 showRandomQuote();
 renderNews();
 loadAnimalImage();
+buildBubbleWrap();
 document.getElementById("breathe-button").addEventListener("click", toggleBreathing);
+document.getElementById("compliment-button").addEventListener("click", showCompliment);

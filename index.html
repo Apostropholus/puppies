@@ -17,6 +17,8 @@
 
   <main class="grid">
 
+    <div class="col col-left">
+
     <!-- Hero: Babytier + Zitat -->
     <section class="card hero" aria-labelledby="hero-heading">
       <h2 id="hero-heading" class="card-title">🐾 Dein Tiermoment</h2>
@@ -29,6 +31,19 @@
         <footer id="quote-author"></footer>
       </blockquote>
     </section>
+
+    <!-- Komplimente-Generator -->
+    <section class="card compliment" aria-labelledby="compliment-heading">
+      <h2 id="compliment-heading" class="card-title">💛 Der Komplimente-Generator</h2>
+      <p class="compliment-text" id="compliment-text" aria-live="polite">
+        Manchmal braucht man ein paar nette Worte …
+      </p>
+      <button class="btn" id="compliment-button" type="button">Ich brauche ein Kompliment</button>
+    </section>
+
+    </div>
+
+    <div class="col col-right">
 
     <!-- Positive Nachrichten -->
     <section class="card news" aria-labelledby="news-heading">
@@ -51,6 +66,16 @@
       <p class="breathe-timer" id="breathe-timer">&nbsp;</p>
       <button class="btn" id="breathe-button" type="button">Übung starten</button>
     </section>
+
+    <!-- Luftpolsterfolie -->
+    <section class="card bubblewrap" aria-labelledby="bubblewrap-heading">
+      <h2 id="bubblewrap-heading" class="card-title">🫧 Luftpolsterfolie</h2>
+      <p class="bubblewrap-intro">Einfach draufdrücken. Extrem befriedigend.</p>
+      <div class="bubble-grid" id="bubble-grid"></div>
+      <p class="bubblewrap-status" id="bubblewrap-status" aria-live="polite">&nbsp;</p>
+    </section>
+
+    </div>
 
   </main>
 

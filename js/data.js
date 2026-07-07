@@ -27,6 +27,26 @@ const QUOTES = [
   { text: "Heute ist ein guter Tag, um einen guten Tag zu haben.", author: "" },
 ];
 
+// --- Komplimente ------------------------------------------------------------
+// Wird beim Klick auf "Ich brauche ein Kompliment" zufällig ausgewählt.
+const COMPLIMENTS = [
+  "Du bist wertvoll – genau so, wie du bist.",
+  "Schön, dass es dich gibt!",
+  "Dein Lächeln steht dir ausgezeichnet.",
+  "Du machst die Welt ein Stückchen besser.",
+  "Mit dir ist das Leben einfach schöner.",
+  "Du hast heute schon mehr geschafft, als du denkst.",
+  "Deine Art, Dinge zu sehen, ist etwas Besonderes.",
+  "Du darfst stolz auf dich sein.",
+  "In deiner Nähe fühlt man sich wohl.",
+  "Du bist stärker, als du glaubst.",
+  "Dein Herz ist am richtigen Fleck.",
+  "Du bringst Menschen zum Lachen – das ist ein Geschenk.",
+  "Es ist mutig, wie du deinen Weg gehst.",
+  "Du bist eine Bereicherung für jeden Raum, den du betrittst.",
+  "Heute ist ein guter Tag – auch, weil du da bist.",
+];
+
 // --- Positive Nachrichten -------------------------------------------------
 // Format: { region, emoji, headline, text, source, sourceUrl }
 // Bitte nur Meldungen aus seriösen Quellen verwenden (z.B. ZEIT, Süddeutsche,
