@@ -71,11 +71,273 @@ async function loadAnimalImage() {
   placeholder.textContent = "🐶💤";
 }
 
-// --- 3. Zufälliges Zitat ---------------------------------------------------
+// --- 3. Zitat setzen / kuratiertes Zufallszitat ----------------------------
+function setQuote(text, author) {
+  document.getElementById("quote-text").textContent = "„" + text + "“";
+  document.getElementById("quote-author").textContent = author ? "– " + author : "";
+}
+
+function randomCuratedQuote() {
+  return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+}
+
 function showRandomQuote() {
-  const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-  document.getElementById("quote-text").textContent = "„" + quote.text + "“";
-  document.getElementById("quote-author").textContent = quote.author ? "– " + quote.author : "";
+  const q = randomCuratedQuote();
+  setQuote(q.text, q.author);
+}
+
+// --- 3b. Tier des Tages (Pexels-Foto + KI-Zitat) ---------------------------
+// Ein Foto pro Tag, für alle Besucher:innen gleich (Tag-im-Jahr als Seed).
+// Foto von Pexels, passendes Zitat von Claude (claude-sonnet-4-6).
+// Ergebnis wird in localStorage zwischengespeichert, damit ein erneutes Laden
+// am selben Tag KEINE weiteren API-Aufrufe auslöst. Fehlen die Schlüssel oder
+// schlägt eine API fehl, fällt die Seite sanft auf die freien Bild-APIs und
+// die kuratierten Zitate zurück.
+const CACHE_PREFIX = "glo-daily-";
+let currentAnimalAlt = null;
+
+function hasConfig() {
+  return !!(window.CONFIG && window.CONFIG.PEXELS_API_KEY && window.CONFIG.ANTHROPIC_API_KEY);
+}
+
+function dayOfYear(date) {
+  const start = Date.UTC(date.getFullYear(), 0, 0);
+  const today = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor((today - start) / 86400000);
+}
+
+function todayKey() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function readDailyCache(dateKey) {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + dateKey);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDailyCache(dateKey, entry) {
+  try {
+    // Ältere Tage aufräumen, damit localStorage nicht vollläuft
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(CACHE_PREFIX) && k !== CACHE_PREFIX + dateKey) {
+        localStorage.removeItem(k);
+      }
+    }
+    localStorage.setItem(CACHE_PREFIX + dateKey, JSON.stringify(entry));
+  } catch {
+    // localStorage nicht verfügbar (z.B. Privatmodus) – dann eben ohne Cache
+  }
+}
+
+function updateCachedQuote(quote) {
+  const key = todayKey();
+  const entry = readDailyCache(key);
+  if (entry) {
+    entry.quote = quote;
+    writeDailyCache(key, entry);
+  }
+}
+
+async function fetchDailyPhoto(term, doy) {
+  const res = await fetch(
+    `https://api.pexels.com/v1/search?query=${encodeURIComponent(term)}&per_page=15&orientation=landscape`,
+    { headers: { Authorization: window.CONFIG.PEXELS_API_KEY } }
+  );
+  if (!res.ok) throw new Error("Pexels API: " + res.status);
+  const data = await res.json();
+  if (!data.photos || !data.photos.length) throw new Error("Pexels: keine Fotos gefunden");
+  // Deterministischer Index → alle Besucher:innen sehen dasselbe Foto pro Tag
+  const photo = data.photos[doy % data.photos.length];
+  return {
+    imageUrl: photo.src.large,
+    alt: photo.alt || term,
+    photographer: photo.photographer,
+    photographerUrl: photo.photographer_url,
+  };
+}
+
+async function generateQuote(animalDescription) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": window.CONFIG.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      // Erlaubt den direkten Aufruf aus dem Browser (CORS)
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 100,
+      messages: [
+        {
+          role: "user",
+          content:
+            "Schreibe ein einziges kurzes, warmherziges deutsches Zitat oder einen " +
+            "aufmunternden Spruch (höchstens 15 Wörter), der zu einem Foto von diesem " +
+            "Tier passt: " + animalDescription + ". Antworte NUR mit dem Spruch – " +
+            "ohne Anführungszeichen, ohne Einleitung, ohne Erklärung.",
+        },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error("Anthropic API: " + res.status);
+  const data = await res.json();
+  const text = data.content && data.content[0] && data.content[0].text;
+  if (!text) throw new Error("Anthropic: leere Antwort");
+  return text.trim().replace(/^[„"']+|[""'']+$/g, "");
+}
+
+function showImageLoading() {
+  const placeholder = document.getElementById("image-placeholder");
+  const img = document.getElementById("animal-image");
+  img.hidden = true;
+  placeholder.hidden = false;
+  placeholder.textContent = "🐾";
+}
+
+function showPhotoCredit(name, url) {
+  const el = document.getElementById("photo-credit");
+  if (!name) {
+    el.hidden = true;
+    return;
+  }
+  el.innerHTML = "";
+  el.append("Foto: ");
+  if (url) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = name;
+    el.appendChild(a);
+  } else {
+    el.append(name);
+  }
+  el.append(" / Pexels");
+  el.hidden = false;
+}
+
+function setHeroNote(msg) {
+  const el = document.getElementById("hero-note");
+  if (!msg) {
+    el.hidden = true;
+    return;
+  }
+  el.textContent = msg;
+  el.hidden = false;
+}
+
+function renderDaily(entry) {
+  const img = document.getElementById("animal-image");
+  const placeholder = document.getElementById("image-placeholder");
+  img.onload = () => {
+    img.hidden = false;
+    placeholder.hidden = true;
+  };
+  img.onerror = () => {
+    img.hidden = true;
+    placeholder.hidden = false;
+    placeholder.textContent = "🐾";
+  };
+  img.alt = entry.alt || "Tier des Tages";
+  img.src = entry.imageUrl;
+  currentAnimalAlt = entry.alt || null;
+  setQuote(entry.quote, "");
+  showPhotoCredit(entry.photographer, entry.photographerUrl);
+  setHeroNote("");
+}
+
+// Sanfter Rückfall auf die freien Bild-APIs + kuratierte Zitate
+function fallbackToFreeAnimal(note) {
+  document.getElementById("hero-heading").textContent = "🐾 Dein Tiermoment";
+  document.getElementById("photo-credit").hidden = true;
+  currentAnimalAlt = null;
+  showRandomQuote();
+  loadAnimalImage();
+  setHeroNote(note || "");
+}
+
+async function initDailyAnimal() {
+  const dateKey = todayKey();
+  const cached = readDailyCache(dateKey);
+  if (cached && cached.imageUrl) {
+    renderDaily(cached);
+    return;
+  }
+
+  if (!hasConfig()) {
+    // Keine Schlüssel hinterlegt → freie APIs + kuratierte Zitate (still)
+    fallbackToFreeAnimal();
+    return;
+  }
+
+  showImageLoading();
+  showQuoteLoading("Dein Tier des Tages wird geladen …");
+  try {
+    const doy = dayOfYear(new Date());
+    const term = SEARCH_TERMS[doy % SEARCH_TERMS.length];
+    const photo = await fetchDailyPhoto(term, doy);
+
+    let quote;
+    try {
+      quote = await generateQuote(photo.alt);
+    } catch {
+      // Claude nicht erreichbar → kuratiertes Zitat als Ersatz
+      quote = randomCuratedQuote().text;
+    }
+
+    const entry = {
+      date: dateKey,
+      imageUrl: photo.imageUrl,
+      alt: photo.alt,
+      photographer: photo.photographer,
+      photographerUrl: photo.photographerUrl,
+      quote,
+    };
+    writeDailyCache(dateKey, entry);
+    renderDaily(entry);
+  } catch {
+    // Pexels nicht erreichbar → freundlicher Rückfall
+    fallbackToFreeAnimal("🌼 Das Tier des Tages ruht gerade – hier ein Gruß aus unserem Vorrat.");
+  }
+}
+
+function showQuoteLoading(msg) {
+  document.getElementById("quote-text").textContent = msg;
+  document.getElementById("quote-author").textContent = "";
+}
+
+// "Neuer Spruch": mit Schlüsseln ein neues KI-Zitat zum selben Tier,
+// sonst ein neues kuratiertes Zitat – das Foto bleibt unverändert.
+async function refreshQuote() {
+  const btn = document.getElementById("quote-refresh-button");
+  if (hasConfig() && currentAnimalAlt) {
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "✨ …";
+    showQuoteLoading("✨ Neuer Spruch wird geschrieben …");
+    try {
+      const quote = await generateQuote(currentAnimalAlt);
+      setQuote(quote, "");
+      updateCachedQuote(quote);
+    } catch {
+      setQuote(randomCuratedQuote().text, "");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  } else {
+    setQuote(randomCuratedQuote().text, "");
+  }
 }
 
 // --- 4. Gute Nachrichten ---------------------------------------------------
@@ -251,11 +513,11 @@ function buildBubbleWrap() {
 
 // --- Start -----------------------------------------------------------------
 setGreeting();
-showRandomQuote();
 renderNews();
-loadAnimalImage();
+initDailyAnimal();
 buildBubbleWrap();
 // Beim Wechsel Handy-/Desktop-Layout mit passender Blasenzahl neu aufbauen
 desktopLayout.addEventListener("change", buildBubbleWrap);
 document.getElementById("breathe-button").addEventListener("click", toggleBreathing);
 document.getElementById("compliment-button").addEventListener("click", showCompliment);
+document.getElementById("quote-refresh-button").addEventListener("click", refreshQuote);

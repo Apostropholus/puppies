@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌴</text></svg>">
   <!-- Der ?v=…-Parameter zwingt Browser nach einer Änderung zum Neuladen:
        bei jeder inhaltlichen Änderung an CSS/JS einfach hochzählen. -->
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 
@@ -21,17 +21,20 @@
 
     <div class="col col-left">
 
-    <!-- Hero: Babytier + Zitat -->
+    <!-- Hero: Tier des Tages (Foto + Zitat) -->
     <section class="card hero" aria-labelledby="hero-heading">
-      <h2 id="hero-heading" class="card-title">🐾 Dein Tiermoment</h2>
+      <h2 id="hero-heading" class="card-title">🐾 Tier des Tages</h2>
       <div class="hero-image-wrap">
-        <div class="image-placeholder" id="image-placeholder" aria-hidden="true">🐶</div>
-        <img id="animal-image" alt="Ein niedliches Tierbild zum Lächeln" hidden>
+        <div class="image-placeholder" id="image-placeholder" aria-hidden="true">🐾</div>
+        <img id="animal-image" alt="Das Tier des Tages" hidden>
       </div>
+      <p class="photo-credit" id="photo-credit" hidden></p>
       <blockquote class="quote">
         <p id="quote-text">…</p>
         <footer id="quote-author"></footer>
       </blockquote>
+      <p class="hero-note" id="hero-note" hidden></p>
+      <button class="btn btn-small" id="quote-refresh-button" type="button">🔄 Neuer Spruch</button>
     </section>
 
     <!-- Komplimente-Generator -->
@@ -86,7 +89,10 @@
     <p class="footer-small">Tierbilder von <a href="https://dog.ceo/dog-api/" target="_blank" rel="noopener">dog.ceo</a>, <a href="https://randomfox.ca" target="_blank" rel="noopener">randomfox.ca</a> und <a href="https://cataas.com" target="_blank" rel="noopener">cataas.com</a></p>
   </footer>
 
-  <script src="js/data.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
+  <!-- config.js liegt lokal (in .gitignore); fehlt sie, läuft die Seite mit
+       den freien Bild-APIs weiter. config.template.js zeigt das Format. -->
+  <script src="config.js?v=4"></script>
+  <script src="js/data.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>

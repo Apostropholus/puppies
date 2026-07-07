@@ -42,10 +42,30 @@ Gotchas learned the hard way:
 - dog.ceo can be unreachable from this network (TLS handshake failure);
   a fox/cat image instead of a dog is the fallback working, not a bug.
 
+## Tier des Tages (Pexels + Claude)
+
+The hero is a daily-animal feature. With API keys in `config.js` (gitignored;
+`config.template.js` is the template) it fetches one Pexels photo per day
+(day-of-year seeds the search term + photo index → same for everyone that day)
+plus a Claude-generated quote (`claude-sonnet-4-6`, called from the browser
+with the `anthropic-dangerous-direct-browser-access: true` header). Result is
+cached in `localStorage` under `glo-daily-<YYYY-MM-DD>` so reloads make no API
+calls. Without `config.js` (e.g. on GitHub Pages, where it's gitignored) it
+falls back to the free keyless image APIs + curated `QUOTES`.
+
+To verify without real keys, inject via CDP `Page.addScriptToEvaluateOnNewDocument`:
+set `window.CONFIG` and override `window.fetch` to mock `api.pexels.com` and
+`api.anthropic.com` responses (see scratchpad `check_daily.py` in session
+history). Assert: heading "Tier des Tages", photo credit shown, cache key
+written, a **reload makes zero API calls**, "🔄 Neuer Spruch" fires a fresh
+Claude call. For the fallback path, don't inject CONFIG → heading flips to
+"Dein Tiermoment", curated quote, credit hidden.
+
 ## Flows worth driving
 
-1. Page load: greeting matches time of day, quote shown, 3 news items
-   (DE/EU/Welt), animal image visible (or emoji placeholder if all APIs down).
+1. Page load: greeting matches time of day, Tier-des-Tages photo (Pexels with
+   keys, else free-API animal / emoji placeholder), quote shown, 3 news items
+   (DE/EU/Welt).
 2. Breathe exercise: click "Übung starten" → label cycles Einatmen (3s) →
    Halten (4s) → Ausatmen (5s) with countdown; second click resets to
    "Bereit?" / "Übung starten".

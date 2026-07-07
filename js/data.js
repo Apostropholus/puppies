@@ -4,8 +4,26 @@
    einfach Einträge ändern, löschen oder neue hinzufügen und speichern.
    ========================================================================= */
 
+// --- Tier des Tages: Pexels-Suchbegriffe ---------------------------------
+// Diese Begriffe werden nach dem Tag im Jahr durchrotiert – jeden Tag ein
+// anderer, dann von vorne. Einfach umsortieren oder ergänzen.
+// (Nur relevant, wenn API-Schlüssel in config.js hinterlegt sind – siehe README.)
+const SEARCH_TERMS = [
+  "baby kitten",
+  "baby puppy",
+  "baby rabbit",
+  "baby duck",
+  "baby fox",
+  "baby deer",
+  "baby hedgehog",
+  "baby panda",
+  "baby otter",
+  "baby penguin",
+];
+
 // --- Zitate & Sprüche ----------------------------------------------------
 // Format: { text: "…", author: "…" }  (author darf leer "" sein)
+// Diese Liste dient auch als Fallback, falls die KI-Zitate nicht verfügbar sind.
 const QUOTES = [
   { text: "Jeder Tag ist eine neue Chance, glücklich zu sein.", author: "" },
   { text: "Das Glück ist das einzige, das sich verdoppelt, wenn man es teilt.", author: "Albert Schweitzer" },
