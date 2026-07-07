@@ -2,7 +2,7 @@
 
 Eine kleine One-Page-Website, die für ein paar Sekunden gute Laune verbreitet:
 ein zufälliges Tierbild, ein positives Zitat, gute Nachrichten, eine
-4-7-8-Atemübung zum Runterkommen, ein Komplimente-Generator und virtuelle
+Atemübung im 3-4-5-Rhythmus zum Runterkommen, ein Komplimente-Generator und virtuelle
 Luftpolsterfolie zum Ploppen (mit Sound, komplett im Browser erzeugt).
 
 **Technik:** Reines HTML/CSS/JS – kein Backend, kein Login, kein Tracking,

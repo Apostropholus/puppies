@@ -46,8 +46,8 @@ Gotchas learned the hard way:
 
 1. Page load: greeting matches time of day, quote shown, 3 news items
    (DE/EU/Welt), animal image visible (or emoji placeholder if all APIs down).
-2. Breathe exercise: click "Übung starten" → label cycles Einatmen (4s) →
-   Halten (7s) → Ausatmen (8s) with countdown; second click resets to
+2. Breathe exercise: click "Übung starten" → label cycles Einatmen (3s) →
+   Halten (4s) → Ausatmen (5s) with countdown; second click resets to
    "Bereit?" / "Übung starten".
 3. Compliment generator: click "Ich brauche ein Kompliment" → text from
    COMPLIMENTS appears with pop animation; consecutive clicks never repeat

@@ -121,11 +121,11 @@ function renderNews() {
   }
 }
 
-// --- 5. Atem-Kreis (4-7-8-Methode) ----------------------------------------
+// --- 5. Atem-Kreis (3-4-5-Rhythmus) ----------------------------------------
 const BREATHE_PHASES = [
-  { label: "Einatmen", seconds: 4, className: "inhale" },
-  { label: "Halten", seconds: 7, className: "hold" },
-  { label: "Ausatmen", seconds: 8, className: "exhale" },
+  { label: "Einatmen", seconds: 3, className: "inhale" },
+  { label: "Halten", seconds: 4, className: "hold" },
+  { label: "Ausatmen", seconds: 5, className: "exhale" },
 ];
 
 const breatheState = { running: false, timeoutId: null, intervalId: null };
