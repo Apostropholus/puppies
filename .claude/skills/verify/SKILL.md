@@ -57,9 +57,9 @@ To verify without real keys, inject via CDP `Page.addScriptToEvaluateOnNewDocume
 set `window.CONFIG` and override `window.fetch` to mock `api.pexels.com` and
 `api.anthropic.com` responses (see scratchpad `check_daily.py` in session
 history). Assert: heading "Tier des Tages", photo credit shown, cache key
-written, a **reload makes zero API calls**, "🔄 Neuer Spruch" fires a fresh
-Claude call. For the fallback path, don't inject CONFIG → heading flips to
-"Dein Tiermoment", curated quote, credit hidden.
+written, and a **reload makes zero API calls**. For the fallback path, don't
+inject CONFIG → heading flips to "Dein Tiermoment", curated quote, credit
+hidden.
 
 ## Flows worth driving
 

@@ -180,12 +180,6 @@ body {
   margin-top: 0.75rem;
 }
 
-.btn-small {
-  font-size: 0.9rem;
-  padding: 0.55rem 1.4rem;
-  margin-top: 1rem;
-}
-
 /* --- News -------------------------------------------------------------------- */
 .news-list {
   list-style: none;

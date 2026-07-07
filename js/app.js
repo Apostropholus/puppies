@@ -137,15 +137,6 @@ function writeDailyCache(dateKey, entry) {
   }
 }
 
-function updateCachedQuote(quote) {
-  const key = todayKey();
-  const entry = readDailyCache(key);
-  if (entry) {
-    entry.quote = quote;
-    writeDailyCache(key, entry);
-  }
-}
-
 async function fetchDailyPhoto(term, doy) {
   const res = await fetch(
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(term)}&per_page=15&orientation=landscape`,
@@ -314,30 +305,6 @@ async function initDailyAnimal() {
 function showQuoteLoading(msg) {
   document.getElementById("quote-text").textContent = msg;
   document.getElementById("quote-author").textContent = "";
-}
-
-// "Neuer Spruch": mit Schlüsseln ein neues KI-Zitat zum selben Tier,
-// sonst ein neues kuratiertes Zitat – das Foto bleibt unverändert.
-async function refreshQuote() {
-  const btn = document.getElementById("quote-refresh-button");
-  if (hasConfig() && currentAnimalAlt) {
-    const original = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "✨ …";
-    showQuoteLoading("✨ Neuer Spruch wird geschrieben …");
-    try {
-      const quote = await generateQuote(currentAnimalAlt);
-      setQuote(quote, "");
-      updateCachedQuote(quote);
-    } catch {
-      setQuote(randomCuratedQuote().text, "");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = original;
-    }
-  } else {
-    setQuote(randomCuratedQuote().text, "");
-  }
 }
 
 // --- 4. Gute Nachrichten ---------------------------------------------------
@@ -520,4 +487,3 @@ buildBubbleWrap();
 desktopLayout.addEventListener("change", buildBubbleWrap);
 document.getElementById("breathe-button").addEventListener("click", toggleBreathing);
 document.getElementById("compliment-button").addEventListener("click", showCompliment);
-document.getElementById("quote-refresh-button").addEventListener("click", refreshQuote);

@@ -16,8 +16,7 @@ zeigen und dazu ein **von Claude** (`claude-sonnet-4-6`) frisch geschriebenes
 Zitat. Das Foto ist an einem Tag für alle Besucher:innen gleich (der Tag im
 Jahr bestimmt Suchbegriff und Auswahl) und wechselt um Mitternacht. Ergebnis
 wird im `localStorage` zwischengespeichert, damit ein erneutes Laden am selben
-Tag keine weiteren API-Aufrufe kostet. Der Button **„🔄 Neuer Spruch"** holt
-ein neues Zitat zum selben Foto.
+Tag keine weiteren API-Aufrufe kostet.
 
 **Einrichten:**
 
@@ -69,8 +68,8 @@ Alle Texte liegen in **`js/data.js`** – einfach die Datei in einem Editor
 öffnen, ändern, speichern, fertig.
 
 **Wichtig nach jeder Änderung an CSS/JS:** In `index.html` den
-`?v=…`-Parameter an den Einbindungen (`style.css?v=4`, `config.js?v=4`,
-`data.js?v=4`, `app.js?v=4`) um eins hochzählen. Das zwingt Browser, die
+`?v=…`-Parameter an den Einbindungen (`style.css?v=5`, `config.js?v=5`,
+`data.js?v=5`, `app.js?v=5`) um eins hochzählen. Das zwingt Browser, die
 geänderten Dateien neu zu laden, statt eine alte Version aus dem Cache zu
 verwenden.
 
