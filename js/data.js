@@ -29,6 +29,12 @@ const SEARCH_TERMS = [
   "baby sloth",
   "baby owl",
   "baby goat",
+  "baby lion",
+  "baby tiger",
+  "baby bear",
+  "baby wolf",
+  "baby zebra",
+  "baby cheetah",
 ];
 
 // --- Zitate & Sprüche ----------------------------------------------------

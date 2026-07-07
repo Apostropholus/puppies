@@ -68,8 +68,8 @@ Alle Texte liegen in **`js/data.js`** – einfach die Datei in einem Editor
 öffnen, ändern, speichern, fertig.
 
 **Wichtig nach jeder Änderung an CSS/JS:** In `index.html` den
-`?v=…`-Parameter an den Einbindungen (`style.css?v=6`, `config.js?v=6`,
-`data.js?v=6`, `app.js?v=6`) um eins hochzählen. Das zwingt Browser, die
+`?v=…`-Parameter an den Einbindungen (`style.css?v=7`, `config.js?v=7`,
+`data.js?v=7`, `app.js?v=7`) um eins hochzählen. Das zwingt Browser, die
 geänderten Dateien neu zu laden, statt eine alte Version aus dem Cache zu
 verwenden.
 
