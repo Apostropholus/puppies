@@ -23,6 +23,11 @@ python3 -m http.server
 Alle Texte liegen in **`js/data.js`** – einfach die Datei in einem Editor
 öffnen, ändern, speichern, fertig.
 
+**Wichtig nach jeder Änderung an CSS/JS:** In `index.html` den
+`?v=…`-Parameter an den drei Einbindungen (`style.css?v=2`, `data.js?v=2`,
+`app.js?v=2`) um eins hochzählen. Das zwingt Browser, die geänderten Dateien
+neu zu laden, statt eine alte Version aus dem Cache zu verwenden.
+
 ### Zitate ändern
 
 In `js/data.js` die Liste `QUOTES` bearbeiten. Jeder Eintrag sieht so aus:
