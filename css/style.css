@@ -82,7 +82,7 @@ body {
 @media (min-width: 900px) {
   .grid {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: stretch; /* beide Spalten gleich hoch */
   }
   .col {
     display: flex;
@@ -92,6 +92,13 @@ body {
   }
   .col-left  { flex: 3; }
   .col-right { flex: 2; }
+
+  /* Die jeweils letzte Karte füllt die Resthöhe ihrer Spalte,
+     damit beide Spalten bündig abschließen. */
+  .col-left .bubblewrap,
+  .col-right .breathe {
+    flex: 1;
+  }
 }
 
 /* --- Karten ----------------------------------------------------------------- */
@@ -207,11 +214,17 @@ body {
   margin-bottom: 1.25rem;
 }
 
+.breathe {
+  display: flex;
+  flex-direction: column;
+}
+
 .breathe-stage {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
+  min-height: 200px;
+  flex: 1; /* zentriert den Kreis, wenn die Karte gestreckt wird */
 }
 
 .breathe-circle {
@@ -298,12 +311,26 @@ body {
   margin-bottom: 1.25rem;
 }
 
+.bubblewrap {
+  display: flex;
+  flex-direction: column;
+}
+
 .bubble-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.9rem;
+  width: 100%;
   max-width: 280px;
-  margin: 0 auto;
+  /* zentriert das Raster in der (ggf. gestreckten) Karte */
+  margin: auto;
+}
+
+@media (min-width: 900px) {
+  .bubble-grid {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 500px;
+  }
 }
 
 .bubble {

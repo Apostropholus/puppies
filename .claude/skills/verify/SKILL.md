@@ -52,11 +52,14 @@ Gotchas learned the hard way:
 3. Compliment generator: click "Ich brauche ein Kompliment" → text from
    COMPLIMENTS appears with pop animation; consecutive clicks never repeat
    the same compliment twice in a row.
-4. Bubble wrap: click bubbles → .popped class + pop sound (WebAudio;
-   check `audioContext.state === 'running'`); re-clicking a popped bubble
-   does nothing; after all 9 → status message, grid regenerates after ~1.6s.
+4. Bubble wrap: 20 bubbles (5x4) at ≥900px viewport, 9 (3x3) below; click
+   bubbles → .popped class + pop sound (WebAudio; check
+   `audioContext.state === 'running'`); re-clicking a popped bubble does
+   nothing; after all popped → status message, grid regenerates after ~1.6s.
    Headless needs `--autoplay-policy=no-user-gesture-required`.
-5. Mobile (390×844): cards stack vertically in order hero → news → breathe →
+5. Desktop column alignment: bottom of .bubblewrap (left col) and .breathe
+   (right col) must match (`getBoundingClientRect().bottom` equal ±2px).
+6. Mobile (390×844): cards stack vertically in order hero → news → breathe →
    compliment → bubblewrap (flex `order`), no horizontal scroll
    (`document.documentElement.scrollWidth <= clientWidth`).
 
@@ -67,3 +70,7 @@ More driver gotchas:
   the click lands on stale coordinates mid-scroll.
 - Filter the CDP target list to `type === "page"` and non-`chrome-extension`
   URLs; headless Chrome sometimes lists an extension background page first.
+- Pace dispatched clicks ≥0.3s apart; faster sequences silently drop some.
+- `Page.captureScreenshot` with `captureBeyondViewport` can render stale
+  class-based styles (popped bubbles shown intact) — for visual-state checks
+  use a plain viewport capture instead.

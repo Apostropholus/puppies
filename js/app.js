@@ -196,7 +196,8 @@ function showCompliment() {
 }
 
 // --- 7. Luftpolsterfolie ------------------------------------------------------
-const BUBBLE_COUNT = 9;
+// Am Desktop (breites Layout) 5x4 Blasen, am Handy 3x3.
+const desktopLayout = window.matchMedia("(min-width: 900px)");
 let audioContext = null;
 
 function playPopSound() {
@@ -224,10 +225,11 @@ function playPopSound() {
 function buildBubbleWrap() {
   const grid = document.getElementById("bubble-grid");
   const status = document.getElementById("bubblewrap-status");
+  const bubbleCount = desktopLayout.matches ? 20 : 9;
   grid.innerHTML = "";
   status.innerHTML = "&nbsp;";
 
-  for (let i = 0; i < BUBBLE_COUNT; i++) {
+  for (let i = 0; i < bubbleCount; i++) {
     const bubble = document.createElement("button");
     bubble.type = "button";
     bubble.className = "bubble";
@@ -238,7 +240,7 @@ function buildBubbleWrap() {
       bubble.setAttribute("aria-label", "Zerplatzt");
       playPopSound();
 
-      if (grid.querySelectorAll(".bubble.popped").length === BUBBLE_COUNT) {
+      if (grid.querySelectorAll(".bubble.popped").length === grid.children.length) {
         status.textContent = "Alle geploppt! 🎉 Neue Folie kommt …";
         setTimeout(buildBubbleWrap, 1600);
       }
@@ -253,5 +255,7 @@ showRandomQuote();
 renderNews();
 loadAnimalImage();
 buildBubbleWrap();
+// Beim Wechsel Handy-/Desktop-Layout mit passender Blasenzahl neu aufbauen
+desktopLayout.addEventListener("change", buildBubbleWrap);
 document.getElementById("breathe-button").addEventListener("click", toggleBreathing);
 document.getElementById("compliment-button").addEventListener("click", showCompliment);
