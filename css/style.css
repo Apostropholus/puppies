@@ -338,19 +338,13 @@ body {
 
 .bubble-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.9rem;
-  width: 100%;
-  max-width: 280px;
-  /* zentriert das Raster in der (ggf. gestreckten) Karte */
-  margin: auto;
-}
-
-@media (min-width: 900px) {
-  .bubble-grid {
-    grid-template-columns: repeat(5, 1fr);
-    max-width: 500px;
-  }
+  gap: 8px; /* muss zum BUBBLE_GAP in buildBubbleWrap() passen */
+  flex: 1; /* füllt die restliche Höhe der Karte */
+  align-content: start;
+  min-height: 260px;
+  overflow: hidden;
+  /* grid-template-columns wird per JS gesetzt, damit die Fläche voll
+     mit Blasen gefüllt ist – abhängig von der verfügbaren Größe. */
 }
 
 .bubble {

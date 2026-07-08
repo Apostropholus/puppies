@@ -425,8 +425,10 @@ function showCompliment() {
 }
 
 // --- 7. Luftpolsterfolie ------------------------------------------------------
-// Am Desktop (breites Layout) 5x4 Blasen, am Handy 3x3.
-const desktopLayout = window.matchMedia("(min-width: 900px)");
+// Die Blasen füllen die gesamte verfügbare Fläche der Karte. Anzahl der
+// Spalten/Zeilen wird aus der Größe berechnet – kleinere Blasen, mehr davon.
+const BUBBLE_GAP = 8; // px – muss zum gap in .bubble-grid (CSS) passen
+const BUBBLE_TARGET = 40; // gewünschter Durchmesser einer Blase in px
 let audioContext = null;
 
 function playPopSound() {
@@ -454,9 +456,19 @@ function playPopSound() {
 function buildBubbleWrap() {
   const grid = document.getElementById("bubble-grid");
   const status = document.getElementById("bubblewrap-status");
-  const bubbleCount = desktopLayout.matches ? 20 : 9;
   grid.innerHTML = "";
   status.innerHTML = "&nbsp;";
+
+  // Spalten aus der Breite, Zeilen aus der Höhe ableiten, damit die Fläche
+  // möglichst vollständig mit Blasen gefüllt ist.
+  const w = grid.clientWidth || 300;
+  const h = grid.clientHeight || 260;
+  const cols = Math.max(3, Math.floor((w + BUBBLE_GAP) / (BUBBLE_TARGET + BUBBLE_GAP)));
+  const cell = (w - BUBBLE_GAP * (cols - 1)) / cols; // tatsächlicher Durchmesser
+  const rows = Math.max(2, Math.floor((h + BUBBLE_GAP) / (cell + BUBBLE_GAP)));
+  const bubbleCount = cols * rows;
+
+  grid.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
   for (let i = 0; i < bubbleCount; i++) {
     const bubble = document.createElement("button");
@@ -531,7 +543,17 @@ renderNews();
 initDailyAnimal();
 buildBubbleWrap();
 initGratitude();
-// Beim Wechsel Handy-/Desktop-Layout mit passender Blasenzahl neu aufbauen
-desktopLayout.addEventListener("change", buildBubbleWrap);
+// Bei jeder Größenänderung (Fenster, Layoutwechsel, nachgeladenes Tierfoto)
+// die Folie passend zur neuen Fläche neu füllen. Der Dimensions-Vergleich
+// verhindert eine Endlosschleife durch das Neuaufbauen selbst.
+const bubbleGridEl = document.getElementById("bubble-grid");
+let lastBubbleDims = "";
+new ResizeObserver(() => {
+  const dims = bubbleGridEl.clientWidth + "x" + bubbleGridEl.clientHeight;
+  if (dims !== lastBubbleDims) {
+    lastBubbleDims = dims;
+    buildBubbleWrap();
+  }
+}).observe(bubbleGridEl);
 document.getElementById("breathe-button").addEventListener("click", toggleBreathing);
 document.getElementById("compliment-button").addEventListener("click", showCompliment);

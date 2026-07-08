@@ -72,11 +72,16 @@ hidden.
 3. Compliment generator: click "Ich brauche ein Kompliment" → text from
    COMPLIMENTS appears with pop animation; consecutive clicks never repeat
    the same compliment twice in a row.
-4. Bubble wrap: 20 bubbles (5x4) at ≥900px viewport, 9 (3x3) below; click
-   bubbles → .popped class + pop sound (WebAudio; check
-   `audioContext.state === 'running'`); re-clicking a popped bubble does
-   nothing; after all popped → status message, grid regenerates after ~1.6s.
-   Headless needs `--autoplay-policy=no-user-gesture-required`.
+4. Bubble wrap: fills the whole card surface — count computed from the grid's
+   measured size (buildBubbleWrap: cols from width, rows from height, ~40px
+   bubbles). Expect ~100+ bubbles on a tall desktop column, ~30 on mobile
+   (min-height 260px). A `ResizeObserver` on `#bubble-grid` rebuilds on size
+   change (guarded by a dims string to avoid a loop). Click bubbles → .popped
+   class + pop sound (WebAudio; check `audioContext.state === 'running'`);
+   re-clicking a popped bubble does nothing; after all popped → status message,
+   grid regenerates after ~1.6s. The grid sits far down the page — scroll it
+   into view before dispatching clicks. Headless needs
+   `--autoplay-policy=no-user-gesture-required`.
 5. Gratitude window: type into `#gratitude-input`, submit `#gratitude-form` →
    a `.gratitude-star.fly` element with "🌠 <text>" appears, input clears, note
    updates, star removed after ~1.8s. Empty submit shows a hint, no star.
