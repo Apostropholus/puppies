@@ -70,8 +70,8 @@ Alle Texte liegen in **`js/data.js`** – einfach die Datei in einem Editor
 öffnen, ändern, speichern, fertig.
 
 **Wichtig nach jeder Änderung an CSS/JS:** In `index.html` den
-`?v=…`-Parameter an den Einbindungen (`style.css?v=9`, `config.js?v=9`,
-`data.js?v=9`, `app.js?v=9`) um eins hochzählen. Das zwingt Browser, die
+`?v=…`-Parameter an den Einbindungen (`style.css?v=10`, `config.js?v=10`,
+`data.js?v=10`, `app.js?v=10`) um eins hochzählen. Das zwingt Browser, die
 geänderten Dateien neu zu laden, statt eine alte Version aus dem Cache zu
 verwenden.
 
@@ -97,7 +97,14 @@ einfach als String:
 
 ### News aktualisieren
 
-In `js/data.js` die Liste `NEWS` bearbeiten. Jeder Eintrag:
+Die Nachrichten wechseln **täglich automatisch**: `js/data.js` enthält die Liste
+`NEWS_SETS` – eine Sammlung von Tages-Sets (je 3 Meldungen). Die Seite zeigt
+jeden Tag ein anderes Set und wechselt **um Mitternacht deutscher Zeit**
+(Europe/Berlin) zum nächsten; nach dem letzten Set beginnt die Rotation von
+vorn. Bleibt die Seite über Mitternacht geöffnet, aktualisiert sie sich um
+kurz nach 00:00 selbst.
+
+Ein neues Tages-Set ergänzt du als weiteren `[ … ]`-Block. Jede Meldung darin:
 
 ```js
 {
@@ -110,9 +117,14 @@ In `js/data.js` die Liste `NEWS` bearbeiten. Jeder Eintrag:
 },
 ```
 
-Die Reihenfolge in der Liste bestimmt die Reihenfolge auf der Seite.
-Bitte nur Meldungen aus seriösen Quellen übernehmen (z.B. ZEIT, Süddeutsche,
-FAZ, ARD/tagesschau, ZDF, Reuters, dpa) und das Medium in `source` angeben.
+Je mehr Sets, desto länger dauert es bis zur Wiederholung. Bitte nur Meldungen
+aus seriösen Quellen übernehmen (z.B. ZEIT, Süddeutsche, FAZ, ARD/tagesschau,
+ZDF, Reuters, dpa) und das Medium in `source` angeben.
+
+> **Hinweis:** Die Seite ist reine Statik und ruft keine Nachrichten live ab –
+> sie rotiert eine gepflegte Sammlung „guter Nachrichten". Für echte
+> tagesaktuelle Schlagzeilen bräuchte es eine Nachrichten-API bzw. ein
+> Backend, das die `NEWS_SETS` regelmäßig neu befüllt (z.B. per GitHub Action).
 
 ### Tier des Tages: Suchbegriffe ändern
 

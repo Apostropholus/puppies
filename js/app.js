@@ -308,10 +308,37 @@ function showQuoteLoading(msg) {
 }
 
 // --- 4. Gute Nachrichten ---------------------------------------------------
+// Jeden Tag ein anderes Nachrichten-Set. Der Wechsel richtet sich nach dem
+// Kalendertag in deutscher Zeit (Europe/Berlin), unabhängig von der Zeitzone
+// der Besucher:innen – so sind die News für alle am selben Tag identisch und
+// wechseln um Mitternacht deutscher Zeit.
+function berlinDateParts() {
+  // en-CA liefert das Datum als "YYYY-MM-DD"
+  const str = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const [y, m, d] = str.split("-").map(Number);
+  return { y, m, d };
+}
+
+// Fortlaufende Tagesnummer (Berliner Kalendertag) für die Set-Auswahl
+function berlinDayNumber() {
+  const { y, m, d } = berlinDateParts();
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+}
+
+function todaysNewsSet() {
+  const index = ((berlinDayNumber() % NEWS_SETS.length) + NEWS_SETS.length) % NEWS_SETS.length;
+  return NEWS_SETS[index];
+}
+
 function renderNews() {
   const list = document.getElementById("news-list");
   list.innerHTML = "";
-  for (const item of NEWS) {
+  for (const item of todaysNewsSet()) {
     const li = document.createElement("li");
     li.className = "news-item";
 
@@ -348,6 +375,31 @@ function renderNews() {
 
     list.appendChild(li);
   }
+}
+
+// Sorgt dafür, dass die News auch bei geöffneter Seite pünktlich wechseln:
+// plant das nächste Neu-Rendern auf 00:01 deutscher Zeit und wiederholt sich.
+function scheduleNewsRefresh() {
+  const [h, m, s] = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Berlin",
+    hourCycle: "h23", // 00–23, vermeidet die "24:00"-Eigenart mancher Browser
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  })
+    .format(new Date())
+    .split(":")
+    .map(Number);
+
+  const secondsIntoDay = h * 3600 + m * 60 + s;
+  // Sekunden bis zum nächsten 00:01 Uhr (Berlin); +1 s Puffer für den Datumswechsel
+  let wait = (86400 - secondsIntoDay + 60) % 86400;
+  if (wait <= 0) wait += 86400;
+
+  setTimeout(() => {
+    renderNews();
+    scheduleNewsRefresh();
+  }, (wait + 1) * 1000);
 }
 
 // --- 5. Atem-Kreis (3-4-5-Rhythmus) ----------------------------------------
@@ -540,6 +592,7 @@ function initGratitude() {
 // --- Start -----------------------------------------------------------------
 setGreeting();
 renderNews();
+scheduleNewsRefresh(); // News um 00:01 deutscher Zeit automatisch wechseln
 initDailyAnimal();
 buildBubbleWrap();
 initGratitude();

@@ -65,7 +65,13 @@ hidden.
 
 1. Page load: greeting matches time of day, Tier-des-Tages photo (Pexels with
    keys, else free-API animal / emoji placeholder), quote shown, 3 news items
-   (DE/EU/Welt).
+   (DE/EU/Welt). News rotate daily: `renderNews()` picks
+   `NEWS_SETS[berlinDayNumber() % NEWS_SETS.length]` (Europe/Berlin date, so
+   same for all visitors, flips at German midnight). `scheduleNewsRefresh()`
+   re-renders at the next 00:01 Berlin. To test rotation without waiting,
+   override `window.berlinDayNumber = () => N; renderNews()` and confirm a
+   different set renders; check the wait math prints a positive
+   seconds-until-00:01.
 2. Breathe exercise: click "Übung starten" → label cycles Einatmen (3s) →
    Halten (4s) → Ausatmen (5s) with countdown; second click resets to
    "Bereit?" / "Übung starten".
