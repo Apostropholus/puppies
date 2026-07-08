@@ -2,8 +2,10 @@
 
 Eine kleine One-Page-Website, die für ein paar Sekunden gute Laune verbreitet:
 ein „Tier des Tages" (Foto + passendes Zitat), gute Nachrichten, eine
-Atemübung im 3-4-5-Rhythmus zum Runterkommen, ein Komplimente-Generator und virtuelle
-Luftpolsterfolie zum Ploppen (mit Sound, komplett im Browser erzeugt).
+Atemübung im 3-4-5-Rhythmus zum Runterkommen, ein Komplimente-Generator,
+virtuelle Luftpolsterfolie zum Ploppen (mit Sound, komplett im Browser erzeugt)
+und ein Dankbarkeits-Fenster, dessen Text als Sternschnuppe davonfliegt
+(nichts wird gespeichert).
 
 **Technik:** Reines HTML/CSS/JS – kein Backend, kein Login, kein Tracking,
 keine Speicherung von Nutzerdaten (außer dem Tier-des-Tages-Cache im
@@ -68,8 +70,8 @@ Alle Texte liegen in **`js/data.js`** – einfach die Datei in einem Editor
 öffnen, ändern, speichern, fertig.
 
 **Wichtig nach jeder Änderung an CSS/JS:** In `index.html` den
-`?v=…`-Parameter an den Einbindungen (`style.css?v=7`, `config.js?v=7`,
-`data.js?v=7`, `app.js?v=7`) um eins hochzählen. Das zwingt Browser, die
+`?v=…`-Parameter an den Einbindungen (`style.css?v=8`, `config.js?v=8`,
+`data.js?v=8`, `app.js?v=8`) um eins hochzählen. Das zwingt Browser, die
 geänderten Dateien neu zu laden, statt eine alte Version aus dem Cache zu
 verwenden.
 

@@ -77,10 +77,13 @@ hidden.
    `audioContext.state === 'running'`); re-clicking a popped bubble does
    nothing; after all popped → status message, grid regenerates after ~1.6s.
    Headless needs `--autoplay-policy=no-user-gesture-required`.
-5. Desktop column alignment: bottom of .bubblewrap (left col) and .breathe
-   (right col) must match (`getBoundingClientRect().bottom` equal ±2px).
-6. Mobile (390×844): cards stack vertically in order hero → news → breathe →
-   compliment → bubblewrap (flex `order`), no horizontal scroll
+5. Gratitude window: type into `#gratitude-input`, submit `#gratitude-form` →
+   a `.gratitude-star.fly` element with "🌠 <text>" appears, input clears, note
+   updates, star removed after ~1.8s. Empty submit shows a hint, no star.
+6. Desktop column alignment: `.bubblewrap` (left col) and `.gratitude` (right
+   col) are the fillers — their `getBoundingClientRect().bottom` must match.
+7. Mobile (390×844): cards stack vertically in order hero → news → breathe →
+   compliment → bubblewrap → gratitude (flex `order`), no horizontal scroll
    (`document.documentElement.scrollWidth <= clientWidth`).
 
 More driver gotchas:

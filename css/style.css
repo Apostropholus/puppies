@@ -78,6 +78,7 @@ body {
 .breathe    { order: 3; }
 .compliment { order: 4; }
 .bubblewrap { order: 5; }
+.gratitude  { order: 6; }
 
 @media (min-width: 900px) {
   .grid {
@@ -96,7 +97,7 @@ body {
   /* Die jeweils letzte Karte füllt die Resthöhe ihrer Spalte,
      damit beide Spalten bündig abschließen. */
   .col-left .bubblewrap,
-  .col-right .breathe {
+  .col-right .gratitude {
     flex: 1;
   }
 }
@@ -389,6 +390,81 @@ body {
   min-height: 1.4em;
 }
 
+/* --- Dankbarkeits-Fenster ----------------------------------------------------- */
+.gratitude {
+  position: relative; /* Anker für die davonfliegende Sternschnuppe */
+  display: flex;
+  flex-direction: column;
+}
+
+.gratitude-intro {
+  font-size: 0.93rem;
+  color: var(--text-soft);
+  margin-bottom: 1.1rem;
+}
+
+.gratitude-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.gratitude-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid var(--sky);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.gratitude-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.gratitude-input::placeholder {
+  color: #b9a894;
+}
+
+.gratitude-note {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin-top: 0.8rem;
+  min-height: 1.4em;
+}
+
+.gratitude-star {
+  position: absolute;
+  font-size: 0.95rem;
+  color: var(--accent-deep);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  box-shadow: 0 4px 16px rgba(122, 96, 70, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 5;
+  will-change: transform, opacity;
+}
+
+.gratitude-star.fly {
+  animation: shooting-star 1.8s ease-in forwards;
+}
+
+@keyframes shooting-star {
+  0%   { transform: translate(0, 0) scale(1) rotate(0); opacity: 1; }
+  15%  { transform: translate(-6px, 6px) scale(1.04) rotate(-3deg); opacity: 1; }
+  100% { transform: translate(240px, -340px) scale(0.25) rotate(22deg); opacity: 0; }
+}
+
 /* Reduzierte Bewegung respektieren */
 @media (prefers-reduced-motion: reduce) {
   .image-placeholder { animation: none; }
@@ -396,6 +472,11 @@ body {
   .compliment-pop { animation: none; }
   .bubble.popped { animation: none; }
   .bubble:hover:not(.popped) { transform: none; }
+  .gratitude-star.fly { animation: gratitude-fade 0.5s ease forwards; }
+}
+
+@keyframes gratitude-fade {
+  to { opacity: 0; }
 }
 
 /* --- Footer -------------------------------------------------------------------- */

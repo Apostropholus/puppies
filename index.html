@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌴</text></svg>">
   <!-- Der ?v=…-Parameter zwingt Browser nach einer Änderung zum Neuladen:
        bei jeder inhaltlichen Änderung an CSS/JS einfach hochzählen. -->
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
 
@@ -79,6 +79,22 @@
       <button class="btn" id="breathe-button" type="button">Übung starten</button>
     </section>
 
+    <!-- Dankbarkeits-Fenster -->
+    <section class="card gratitude" aria-labelledby="gratitude-heading">
+      <h2 id="gratitude-heading" class="card-title">🌟 Dankbarkeits-Fenster</h2>
+      <p class="gratitude-intro">
+        Wofür bist du heute dankbar? Tipp es ein – schon das Aufschreiben tut gut.
+        Nichts wird gespeichert.
+      </p>
+      <form class="gratitude-form" id="gratitude-form">
+        <input type="text" id="gratitude-input" class="gratitude-input" maxlength="120"
+               placeholder="Heute bin ich dankbar für …" autocomplete="off"
+               aria-label="Wofür bist du heute dankbar?">
+        <button class="btn" id="gratitude-button" type="submit">Abschicken ✨</button>
+      </form>
+      <p class="gratitude-note" id="gratitude-note" aria-live="polite">&nbsp;</p>
+    </section>
+
     </div>
 
   </main>
@@ -90,8 +106,8 @@
 
   <!-- config.js liegt lokal (in .gitignore); fehlt sie, läuft die Seite mit
        den freien Bild-APIs weiter. config.template.js zeigt das Format. -->
-  <script src="config.js?v=7"></script>
-  <script src="js/data.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="config.js?v=8"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

@@ -478,11 +478,59 @@ function buildBubbleWrap() {
   }
 }
 
+// --- 8. Dankbarkeits-Fenster --------------------------------------------------
+// Text eintippen, "Abschicken" – der Text fliegt als Sternschnuppe davon.
+// Nichts wird gespeichert; allein das Aufschreiben tut gut.
+// (Reduzierte Bewegung wird per CSS-@media respektiert.)
+function launchGratitudeStar(text) {
+  const card = document.querySelector(".gratitude");
+  const input = document.getElementById("gratitude-input");
+
+  const star = document.createElement("div");
+  star.className = "gratitude-star";
+  star.textContent = "🌠 " + text;
+
+  // Startposition am Textfeld ausrichten
+  const cardRect = card.getBoundingClientRect();
+  const inRect = input.getBoundingClientRect();
+  star.style.left = inRect.left - cardRect.left + "px";
+  star.style.top = inRect.top - cardRect.top + "px";
+  star.style.maxWidth = inRect.width + "px";
+
+  card.appendChild(star);
+  // Im nächsten Frame die Flug-Animation starten
+  requestAnimationFrame(() => star.classList.add("fly"));
+  star.addEventListener("animationend", () => star.remove());
+  // Sicherheitsnetz, falls animationend ausbleibt
+  setTimeout(() => star.remove(), 3000);
+}
+
+function initGratitude() {
+  const form = document.getElementById("gratitude-form");
+  const input = document.getElementById("gratitude-input");
+  const note = document.getElementById("gratitude-note");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) {
+      note.textContent = "Tipp erst etwas Schönes ein 💛";
+      input.focus();
+      return;
+    }
+    launchGratitudeStar(text);
+    input.value = "";
+    note.textContent = "Losgeflogen! ✨ Trag ruhig noch etwas ein.";
+    input.focus();
+  });
+}
+
 // --- Start -----------------------------------------------------------------
 setGreeting();
 renderNews();
 initDailyAnimal();
 buildBubbleWrap();
+initGratitude();
 // Beim Wechsel Handy-/Desktop-Layout mit passender Blasenzahl neu aufbauen
 desktopLayout.addEventListener("change", buildBubbleWrap);
 document.getElementById("breathe-button").addEventListener("click", toggleBreathing);
