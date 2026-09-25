@@ -4,37 +4,68 @@
    einfach Einträge ändern, löschen oder neue hinzufügen und speichern.
    ========================================================================= */
 
-// --- Tier des Tages: Pexels-Suchbegriffe ---------------------------------
-// Diese Begriffe werden nach dem Tag im Jahr durchrotiert – jeden Tag ein
-// anderer, dann von vorne. Einfach umsortieren oder ergänzen.
-// (Nur relevant, wenn API-Schlüssel in config.js hinterlegt sind – siehe README.)
-const SEARCH_TERMS = [
-  "baby kitten",
-  "baby puppy",
-  "baby rabbit",
-  "baby duck",
-  "baby fox",
-  "baby deer",
-  "baby hedgehog",
-  "baby panda",
-  "baby otter",
-  "baby penguin",
-  "baby elephant",
-  "baby giraffe",
-  "baby wombat",
-  "baby koala",
-  "baby kangaroo",
-  "baby lamb",
-  "baby seal",
-  "baby sloth",
-  "baby owl",
-  "baby goat",
-  "baby lion",
-  "baby tiger",
-  "baby bear",
-  "baby wolf",
-  "baby zebra",
-  "baby cheetah",
+// --- Tierbabys ------------------------------------------------------------
+// Jede Tierart ist EIN Eintrag. Die Seite wählt zuerst die Tierart (reihum
+// bzw. zufällig) und erst danach ein Foto – so kommen alle Arten gleich oft
+// dran, egal wie viele Fotos es von einer Art gibt. Die Reihenfolge ist bunt
+// gemischt (Haustier, Wildtier, Vogel, …), damit nicht zwei ähnliche Tiere
+// hintereinander kommen.
+//
+//   name:   Anzeigename (deutsch), geht auch an Claude für Bildprüfung + Zitat
+//   query:  Pexels-Suchbegriff (englisch funktioniert am besten)
+//   words:  Mindestens eines dieser Wörter muss in der Fotobeschreibung
+//           stehen, sonst wird das Foto verworfen (Schutz vor Fehltreffern)
+//   photos: Pexels-Foto-IDs für den Betrieb OHNE Schlüssel (die Zahl am Ende
+//           der Pexels-Adresse, z.B. pexels.com/photo/…-10673284/). Darf leer
+//           bleiben – die Art erscheint dann nur mit Pexels-Schlüssel.
+const BABY_ANIMALS = [
+  { name: "Kätzchen", query: "kitten", words: ["kitten"], photos: [8523547, 17515917, 5441458] },
+  { name: "Fuchswelpe", query: "fox cub", words: ["fox"], photos: [10673284, 20407336] },
+  { name: "Elefantenbaby", query: "baby elephant", words: ["elephant"], photos: [750536, 16591291] },
+  { name: "Entenküken", query: "duckling", words: ["duckling", "duck"], photos: [16973277, 32885762, 1300353] },
+  { name: "Pandababy", query: "baby panda", words: ["panda"], photos: [1661535] },
+  { name: "Lamm", query: "lamb", words: ["lamb", "sheep"], photos: [16384899, 28544181, 17564394] },
+  { name: "Koalababy", query: "baby koala", words: ["koala"], photos: [] },
+  { name: "Robbenbaby", query: "seal pup", words: ["seal"], photos: [10273316, 463925] },
+  { name: "Hundewelpe", query: "puppy", words: ["puppy", "puppies"], photos: [18618491, 3726277, 10361804] },
+  { name: "Rehkitz", query: "fawn", words: ["fawn", "deer"], photos: [19781448, 17884247, 17997821] },
+  { name: "Löwenjunges", query: "lion cub", words: ["lion", "lioness"], photos: [624033, 12778384] },
+  { name: "Küken", query: "baby chick", words: ["chick", "chicken", "hen"], photos: [7440694, 29116765] },
+  { name: "Tigerjunges", query: "tiger cub", words: ["tiger"], photos: [29070049, 28807791, 2541239] },
+  { name: "Ferkel", query: "piglet", words: ["piglet", "pig"], photos: [4767458, 4813937, 20447453] },
+  { name: "Känguru-Joey", query: "baby kangaroo joey", words: ["kangaroo", "wallaby", "joey"], photos: [7178637, 15117434, 14991256] },
+  { name: "Pinguinküken", query: "baby penguin", words: ["penguin"], photos: [6475330] },
+  { name: "Häschen", query: "baby bunny", words: ["bunny", "bunnies", "rabbit"], photos: [16773474, 4123972] },
+  { name: "Eulenküken", query: "baby owl", words: ["owl", "owlet"], photos: [] },
+  { name: "Giraffenbaby", query: "baby giraffe", words: ["giraffe"], photos: [] },
+  { name: "Fohlen", query: "foal", words: ["foal"], photos: [9102270, 7922991, 10254517] },
+  { name: "Gepardenjunges", query: "cheetah cub", words: ["cheetah"], photos: [5306211, 31362074, 5306203] },
+  { name: "Zicklein", query: "baby goat", words: ["goat"], photos: [7516858, 22863546] },
+  { name: "Otterbaby", query: "baby otter", words: ["otter"], photos: [] },
+  { name: "Bärenjunges", query: "bear cub", words: ["bear"], photos: [33531974, 19982551] },
+  { name: "Kälbchen", query: "baby cow calf", words: ["calf", "calves", "cow", "cattle"], photos: [5205221, 20634965, 8024491] },
+  { name: "Zebrafohlen", query: "baby zebra", words: ["zebra"], photos: [19040675] },
+  { name: "Igelbaby", query: "baby hedgehog", words: ["hedgehog"], photos: [] },
+  { name: "Roter-Panda-Baby", query: "baby red panda", words: ["red panda"], photos: [] },
+  { name: "Gänseküken", query: "gosling", words: ["gosling", "goose", "geese"], photos: [12284846] },
+  { name: "Faultierbaby", query: "baby sloth", words: ["sloth"], photos: [] },
+  { name: "Alpakababy", query: "baby alpaca", words: ["alpaca", "llama"], photos: [7022792] },
+  { name: "Eisbärjunges", query: "polar bear cub", words: ["polar bear"], photos: [] },
+  { name: "Eichhörnchenbaby", query: "baby squirrel", words: ["squirrel"], photos: [] },
+  { name: "Nilpferdbaby", query: "baby hippo", words: ["hippo", "hippopotamus"], photos: [] },
+  { name: "Meerschweinchenbaby", query: "baby guinea pig", words: ["guinea pig"], photos: [] },
+  { name: "Wolfswelpe", query: "wolf pup", words: ["wolf", "wolves"], photos: [] },
+  { name: "Erdmännchenbaby", query: "baby meerkat", words: ["meerkat"], photos: [] },
+  { name: "Eselfohlen", query: "baby donkey", words: ["donkey"], photos: [] },
+  { name: "Waschbärbaby", query: "baby raccoon", words: ["raccoon"], photos: [] },
+  { name: "Gorillababy", query: "baby gorilla", words: ["gorilla"], photos: [] },
+  { name: "Schwanenküken", query: "cygnet", words: ["cygnet", "swan"], photos: [] },
+  { name: "Orang-Utan-Baby", query: "baby orangutan", words: ["orangutan"], photos: [] },
+  { name: "Frischling", query: "wild boar piglet", words: ["boar"], photos: [] },
+  { name: "Nashornbaby", query: "baby rhino", words: ["rhino", "rhinoceros"], photos: [] },
+  { name: "Schildkrötenbaby", query: "baby sea turtle", words: ["turtle", "tortoise"], photos: [] },
+  { name: "Capybarababy", query: "baby capybara", words: ["capybara"], photos: [] },
+  { name: "Affenbaby", query: "baby monkey", words: ["monkey", "macaque"], photos: [] },
 ];
 
 // --- Zitate & Sprüche ----------------------------------------------------
