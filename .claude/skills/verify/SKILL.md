@@ -35,36 +35,58 @@ Gotchas learned the hard way:
 - `Page.captureScreenshot` with `captureBeyondViewport: true` **resets the
   scroll position** — re-scroll (`scrollIntoView`) and recompute element
   coordinates before any subsequent `Input.dispatchMouseEvent` click.
-- To simulate the animal-image APIs being down, use
-  `--host-resolver-rules=MAP dog.ceo ~NOTFOUND, MAP images.dog.ceo ~NOTFOUND, MAP randomfox.ca ~NOTFOUND, MAP cataas.com ~NOTFOUND`.
+- All animal photos come from the Pexels CDN (`images.pexels.com`). To
+  simulate it being down, use `--host-resolver-rules=MAP images.pexels.com ~NOTFOUND`.
   Do NOT use `MAP * ~NOTFOUND, EXCLUDE localhost` — it breaks localhost
   navigation too (ERR_ABORTED).
-- dog.ceo can be unreachable from this network (TLS handshake failure);
-  a fox/cat image instead of a dog is the fallback working, not a bug.
+- In sandboxed/cloud sessions the image hosts may be blocked entirely; with
+  Playwright, `page.route("https://images.pexels.com/**")` and fulfill with a
+  local JPEG. Mocked `api.pexels.com` / `api.anthropic.com` responses need an
+  `access-control-allow-origin: *` header or the page's `fetch` rejects them.
 
 ## Tier des Tages (Pexels + Claude)
 
-The hero is a daily-animal feature. With API keys in `config.js` (gitignored;
-`config.template.js` is the template) it fetches one Pexels photo per day
-(day-of-year seeds the search term + photo index → same for everyone that day)
-plus a Claude-generated quote (`claude-sonnet-4-6`, called from the browser
-with the `anthropic-dangerous-direct-browser-access: true` header). Result is
-cached in `localStorage` under `glo-daily-<YYYY-MM-DD>` so reloads make no API
-calls. Without `config.js` (e.g. on GitHub Pages, where it's gitignored) it
-falls back to the free keyless image APIs + curated `QUOTES`.
+The hero is a daily-animal feature driven by `BABY_ANIMALS` in `js/data.js`
+(one entry per species: `name`, `query`, `words`, `photos`).
 
-To verify without real keys, inject via CDP `Page.addScriptToEvaluateOnNewDocument`:
-set `window.CONFIG` and override `window.fetch` to mock `api.pexels.com` and
-`api.anthropic.com` responses (see scratchpad `check_daily.py` in session
-history). Assert: heading "Tier des Tages", photo credit shown, cache key
-written, and a **reload makes zero API calls**. For the fallback path, don't
-inject CONFIG → heading flips to "Dein Tiermoment", curated quote, credit
-hidden.
+- **With `PEXELS_API_KEY`** in `config.js` (gitignored; `config.template.js`
+  is the template): species = `BABY_ANIMALS[dayNumber % n]` (continuous local
+  day number → every species equally often, same for everyone that day).
+  Pexels search (`per_page=80`, landscape) → `isGoodCandidate` filter
+  (width ≥ 2400, ratio 1.2–2, alt/slug must contain a species word AND a
+  `BABY_WORDS` entry and no `EXCLUDE_WORDS` entry). Candidates are reviewed
+  in windows of 6; the window rotates per cycle so a species shows a
+  different photo next time.
+- **With `ANTHROPIC_API_KEY` too:** `reviewWithClaude` sends the window as
+  URL image blocks (`w=800`) to `claude-sonnet-4-6` (browser call with
+  `anthropic-dangerous-direct-browser-access: true`) and gets JSON
+  `{index, quote}`; `-1` → next window / next species, max 3 reviews/day, then
+  fallback. If the review call itself fails: first candidate + text-only
+  `generateQuote`, then curated quote.
+- Result cached in `localStorage` under `glo-daily-<YYYY-MM-DD>` with `v: 2`
+  (older formats are ignored) so reloads make no API calls. If the cached
+  photo no longer loads, a curated photo is shown instead (quote kept).
+- **Without a Pexels key** (or on any failure): "Dein Tiermoment" — a random
+  species with `photos`, then a random ID from it (species-balanced, never the
+  same species twice in a row via `glo-last-animal`), URL
+  `images.pexels.com/photos/<id>/pexels-photo-<id>.jpeg`. A failing photo
+  skips to another species (max 5 tries, then 🐶💤). Credit links the Pexels
+  photo page.
+- Images use `srcset` 640/960/1280/1920 w with `sizes`.
+
+To verify without real keys, route `**/config.js*` to set `window.CONFIG`
+and mock `api.pexels.com` / `api.anthropic.com`. The filter checks the
+species, so the mocked Pexels alt texts must name the species that was
+actually queried (read `query` from the request URL). Assert: heading "Tier
+des Tages", Claude receives only filtered candidates, the chosen photo and
+quote are shown, photographer credit, cache written, and a **reload makes
+zero API calls**. For the fallback path, don't set CONFIG → heading
+"Dein Tiermoment", curated quote, credit "Foto: Pexels".
 
 ## Flows worth driving
 
 1. Page load: greeting matches time of day, Tier-des-Tages photo (Pexels with
-   keys, else free-API animal / emoji placeholder), quote shown, 3 news items
+   keys, else curated Pexels photo / emoji placeholder), quote shown, 3 news items
    (DE/EU/Welt). News rotate daily: `renderNews()` picks
    `NEWS_SETS[berlinDayNumber() % NEWS_SETS.length]` (Europe/Berlin date, so
    same for all visitors, flips at German midnight). `scheduleNewsRefresh()`

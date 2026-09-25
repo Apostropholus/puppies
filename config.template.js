@@ -11,15 +11,18 @@
    verwendeter Schlüssel ist grundsätzlich für Besucher:innen sichtbar.
    - Der Anthropic-Schlüssel kostet echtes Geld: Lege in der Anthropic-Konsole
      ein striktes Ausgabelimit fest und teile diesen Schlüssel NICHT öffentlich.
-   - Ohne config.js läuft die Seite trotzdem: Sie fällt dann automatisch auf
-     die kostenlosen Tierbild-APIs und die kuratierten Zitate zurück.
+   - Ohne config.js läuft die Seite trotzdem: Sie zeigt dann Fotos aus der
+     festen Liste in js/data.js und die kuratierten Zitate.
    Details stehen in der README unter "Sicherheit & Deployment".
    ========================================================================= */
 
 window.CONFIG = {
   // Kostenloser Schlüssel: https://www.pexels.com/api/
+  // Nötig für das "Tier des Tages" (tägliche Suche nach Tierbaby-Fotos).
   PEXELS_API_KEY: "",
 
   // https://console.anthropic.com/  – Modell: claude-sonnet-4-6
+  // Optional, aber empfohlen: Claude sieht sich die Foto-Kandidaten an, lässt
+  // nur wirklich süße, scharfe Tierbaby-Fotos durch und schreibt das Zitat.
   ANTHROPIC_API_KEY: "",
 };

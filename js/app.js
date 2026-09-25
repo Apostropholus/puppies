@@ -15,60 +15,86 @@ function setGreeting() {
   document.getElementById("greeting").textContent = greeting;
 }
 
-// --- 2. Zufälliges Babytier-Bild ------------------------------------------
-// Kostenlose, schlüssellose Bild-APIs. Bei jedem Seitenaufruf wird zufällig
-// eine Quelle gewählt; schlägt sie fehl, probieren wir die nächste.
-const IMAGE_SOURCES = [
-  {
-    name: "Hund (dog.ceo)",
-    async getUrl() {
-      const res = await fetch("https://dog.ceo/api/breeds/image/random");
-      const data = await res.json();
-      return data.message;
-    },
-  },
-  {
-    name: "Fuchs (randomfox.ca)",
-    async getUrl() {
-      const res = await fetch("https://randomfox.ca/floof/");
-      const data = await res.json();
-      return data.image;
-    },
-  },
-  {
-    name: "Katze (cataas.com)",
-    async getUrl() {
-      const res = await fetch("https://cataas.com/cat?json=true");
-      const data = await res.json();
-      return data.url;
-    },
-  },
-];
+// --- 2. Tierbaby-Fotos -------------------------------------------------------
+// Alle Fotos kommen von Pexels. Deren Bildserver liefert jedes Foto in genau
+// der Breite, die das Display braucht (srcset): scharf auf Retina-Displays,
+// sparsam auf dem Handy.
+const PHOTO_WIDTHS = [640, 960, 1280, 1920];
+const PHOTO_SIZES = "(min-width: 900px) 520px, calc(100vw - 5rem)";
 
-async function loadAnimalImage() {
+function pexelsImageUrl(base, width) {
+  return `${base}?auto=compress&cs=tinysrgb&w=${width}`;
+}
+
+// Bildadresse eines Pexels-Fotos aus seiner ID (für die feste Fotoliste)
+function pexelsBaseFromId(id) {
+  return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg`;
+}
+
+// Zeigt ein Foto im Hero an. Das Promise schlägt fehl, wenn es nicht lädt.
+function showPhoto(base, alt) {
   const img = document.getElementById("animal-image");
   const placeholder = document.getElementById("image-placeholder");
-
-  // Quellen in zufälliger Reihenfolge durchprobieren
-  const sources = [...IMAGE_SOURCES].sort(() => Math.random() - 0.5);
-
-  for (const source of sources) {
-    try {
-      const url = await source.getUrl();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = url;
-      });
+  return new Promise((resolve, reject) => {
+    img.onload = () => {
       img.hidden = false;
       placeholder.hidden = true;
+      resolve();
+    };
+    img.onerror = reject;
+    img.alt = alt;
+    img.sizes = PHOTO_SIZES;
+    img.srcset = PHOTO_WIDTHS.map((w) => `${pexelsImageUrl(base, w)} ${w}w`).join(", ");
+    img.src = pexelsImageUrl(base, 1280);
+  });
+}
+
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// Feste Fotoliste (Betrieb ohne Pexels-Schlüssel): erst eine Tierart, dann
+// ein Foto davon – so ist jede Art gleich wahrscheinlich, egal wie viele
+// Fotos sie hat. Die zuletzt gezeigte Art kommt nicht direkt noch einmal.
+const LAST_ANIMAL_KEY = "glo-last-animal";
+
+function pickCuratedPhoto(skipNames) {
+  const all = BABY_ANIMALS.filter((a) => a.photos.length);
+  const fresh = all.filter((a) => !skipNames.includes(a.name));
+  const pool = fresh.length ? fresh : all;
+  if (!pool.length) return null;
+  const animal = randomItem(pool);
+  return { animal, id: randomItem(animal.photos) };
+}
+
+async function loadCuratedPhoto() {
+  const skip = [];
+  try {
+    const last = localStorage.getItem(LAST_ANIMAL_KEY);
+    if (last) skip.push(last);
+  } catch {
+    // localStorage nicht verfügbar – dann eben ohne Wiederholungsschutz
+  }
+
+  // Lädt ein Foto nicht (z.B. bei Pexels gelöscht), kommt eine andere Art dran
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const pick = pickCuratedPhoto(skip);
+    if (!pick) break;
+    try {
+      await showPhoto(pexelsBaseFromId(pick.id), pick.animal.name);
+      showPhotoCredit("", "", `https://www.pexels.com/photo/${pick.id}/`);
+      try {
+        localStorage.setItem(LAST_ANIMAL_KEY, pick.animal.name);
+      } catch {
+        // egal
+      }
       return;
     } catch {
-      // nächste Quelle probieren
+      skip.push(pick.animal.name);
     }
   }
-  // Alle Quellen fehlgeschlagen: freundlicher Emoji-Platzhalter bleibt stehen
-  placeholder.textContent = "🐶💤";
+  // Nichts ladbar: freundlicher Emoji-Platzhalter bleibt stehen
+  document.getElementById("image-placeholder").textContent = "🐶💤";
 }
 
 // --- 3. Zitat setzen / kuratiertes Zufallszitat ----------------------------
@@ -86,24 +112,52 @@ function showRandomQuote() {
   setQuote(q.text, q.author);
 }
 
-// --- 3b. Tier des Tages (Pexels-Foto + KI-Zitat) ---------------------------
-// Ein Foto pro Tag, für alle Besucher:innen gleich (Tag-im-Jahr als Seed).
-// Foto von Pexels, passendes Zitat von Claude (claude-sonnet-4-6).
+// --- 3b. Tier des Tages (Pexels-Suche + Bildprüfung durch Claude) -----------
+// Ein Foto pro Tag, für alle Besucher:innen gleich. Die Tierart wechselt
+// täglich reihum durch BABY_ANIMALS, so kommt jede Art gleich oft dran.
+// Pexels liefert Kandidaten, die streng vorgefiltert werden (Auflösung,
+// Querformat, Bildbeschreibung). Mit Anthropic-Schlüssel sieht sich Claude
+// (claude-sonnet-4-6) die Kandidaten an, wählt das schönste Foto, das wirklich
+// ein süßes Tierbaby zeigt, und schreibt das passende Zitat dazu.
 // Ergebnis wird in localStorage zwischengespeichert, damit ein erneutes Laden
-// am selben Tag KEINE weiteren API-Aufrufe auslöst. Fehlen die Schlüssel oder
-// schlägt eine API fehl, fällt die Seite sanft auf die freien Bild-APIs und
-// die kuratierten Zitate zurück.
+// am selben Tag KEINE weiteren API-Aufrufe auslöst. Fehlt der Pexels-Schlüssel
+// oder schlägt etwas fehl, zeigt die Seite ein Foto aus der festen Liste.
 const CACHE_PREFIX = "glo-daily-";
-let currentAnimalAlt = null;
+const CACHE_VERSION = 2; // bei Formatänderung hochzählen – alter Cache verfällt
+const CANDIDATES_PER_REVIEW = 6;
+const MAX_REVIEWS_PER_DAY = 3;
+const MIN_PHOTO_WIDTH = 2400; // px – schließt alte, niedrig aufgelöste Fotos aus
 
-function hasConfig() {
-  return !!(window.CONFIG && window.CONFIG.PEXELS_API_KEY && window.CONFIG.ANTHROPIC_API_KEY);
+// Die Fotobeschreibung muss eines dieser Wörter enthalten (Tierbaby) …
+const BABY_WORDS = [
+  "baby", "babies", "cub", "pup", "puppy", "puppies", "kitten", "young", "juvenile",
+  "little", "newborn", "calf", "calves", "foal", "fawn", "lamb", "piglet", "chick",
+  "duckling", "gosling", "cygnet", "owlet", "joey", "hatchling", "fledgling",
+  "bunny", "bunnies", "cria",
+];
+// … und darf keines von diesen enthalten (Menschen, Spielzeug, Grafik, Trauriges).
+const EXCLUDE_WORDS = [
+  "person", "people", "man", "men", "woman", "women", "girl", "boy", "child", "children",
+  "kid", "kids", "toddler", "infant", "human", "shower", "toy", "plush", "stuffed", "teddy", "doll",
+  "figurine", "statue", "sculpture", "ornament", "carving", "wooden", "ceramic",
+  "plastic", "knitted", "crochet", "illustration", "drawing", "painting", "cartoon",
+  "art", "mural", "graffiti", "tattoo", "logo", "poster", "cake", "cookie", "costume",
+  "mask", "dead", "meat", "taxidermy", "skull", "cage", "caged", "hunting", "hunter",
+  "grayscale", "greyscale", "monochrome",
+];
+
+function hasPexelsKey() {
+  return !!(window.CONFIG && window.CONFIG.PEXELS_API_KEY);
 }
 
-function dayOfYear(date) {
-  const start = Date.UTC(date.getFullYear(), 0, 0);
-  const today = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-  return Math.floor((today - start) / 86400000);
+function hasClaudeKey() {
+  return !!(window.CONFIG && window.CONFIG.ANTHROPIC_API_KEY);
+}
+
+// Fortlaufende Tagesnummer (lokaler Kalendertag) – anders als der Tag im Jahr
+// beginnt sie nicht jedes Neujahr von vorn, die Rotation bleibt gleichmäßig.
+function dayNumber(date) {
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
 }
 
 function todayKey() {
@@ -115,8 +169,8 @@ function todayKey() {
 
 function readDailyCache(dateKey) {
   try {
-    const raw = localStorage.getItem(CACHE_PREFIX + dateKey);
-    return raw ? JSON.parse(raw) : null;
+    const entry = JSON.parse(localStorage.getItem(CACHE_PREFIX + dateKey));
+    return entry && entry.v === CACHE_VERSION && entry.imageBase ? entry : null;
   } catch {
     return null;
   }
@@ -137,25 +191,44 @@ function writeDailyCache(dateKey, entry) {
   }
 }
 
-async function fetchDailyPhoto(term, doy) {
+// Ganzes Wort (auch Plural auf -s/-es), ohne Groß-/Kleinschreibung
+function containsWord(text, words) {
+  return words.some((w) => new RegExp("\\b" + w + "(e?s)?\\b", "i").test(text));
+}
+
+function isGoodCandidate(photo, animal) {
+  if (photo.width < MIN_PHOTO_WIDTH) return false;
+  const ratio = photo.width / photo.height;
+  if (ratio < 1.2 || ratio > 2) return false; // passt gut in den 4:3-Rahmen
+  // Bildbeschreibung + sprechender Teil der Adresse (…/photo/fox-cub-in-grass-123/)
+  const slug = (photo.url || "").split("/photo/")[1] || "";
+  const text = (photo.alt || "") + " " + slug.replace(/[-/\d]+/g, " ");
+  return (
+    containsWord(text, animal.words) &&
+    containsWord(text, BABY_WORDS) &&
+    !containsWord(text, EXCLUDE_WORDS)
+  );
+}
+
+async function searchBabyPhotos(animal) {
   const res = await fetch(
-    `https://api.pexels.com/v1/search?query=${encodeURIComponent(term)}&per_page=15&orientation=landscape`,
+    `https://api.pexels.com/v1/search?query=${encodeURIComponent(animal.query)}&per_page=80&orientation=landscape`,
     { headers: { Authorization: window.CONFIG.PEXELS_API_KEY } }
   );
   if (!res.ok) throw new Error("Pexels API: " + res.status);
   const data = await res.json();
-  if (!data.photos || !data.photos.length) throw new Error("Pexels: keine Fotos gefunden");
-  // Deterministischer Index → alle Besucher:innen sehen dasselbe Foto pro Tag
-  const photo = data.photos[doy % data.photos.length];
-  return {
-    imageUrl: photo.src.large,
-    alt: photo.alt || term,
-    photographer: photo.photographer,
-    photographerUrl: photo.photographer_url,
-  };
+  return (data.photos || [])
+    .filter((p) => isGoodCandidate(p, animal))
+    .map((p) => ({
+      base: p.src.original,
+      alt: p.alt || animal.name,
+      photographer: p.photographer,
+      photographerUrl: p.photographer_url,
+      pageUrl: p.url,
+    }));
 }
 
-async function generateQuote(animalDescription) {
+async function callClaude(content, maxTokens) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -167,24 +240,93 @@ async function generateQuote(animalDescription) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
-      max_tokens: 100,
-      messages: [
-        {
-          role: "user",
-          content:
-            "Schreibe ein einziges kurzes, warmherziges deutsches Zitat oder einen " +
-            "aufmunternden Spruch (höchstens 15 Wörter), der zu einem Foto von diesem " +
-            "Tier passt: " + animalDescription + ". Antworte NUR mit dem Spruch – " +
-            "ohne Anführungszeichen, ohne Einleitung, ohne Erklärung.",
-        },
-      ],
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content }],
     }),
   });
   if (!res.ok) throw new Error("Anthropic API: " + res.status);
   const data = await res.json();
   const text = data.content && data.content[0] && data.content[0].text;
   if (!text) throw new Error("Anthropic: leere Antwort");
-  return text.trim().replace(/^[„"']+|[""'']+$/g, "");
+  return text.trim();
+}
+
+function cleanQuote(text) {
+  return text.trim().replace(/^[„“”"'‚‘’]+|[„“”"'‚‘’]+$/g, "");
+}
+
+// Claude sieht sich die Kandidaten an, wählt das schönste Tierbaby-Foto und
+// schreibt gleich das Zitat dazu. Ergebnis: { index, quote } – index -1 heißt,
+// keines der Fotos ist gut genug.
+async function reviewWithClaude(animal, candidates) {
+  const content = [];
+  candidates.forEach((c, i) => {
+    content.push({ type: "text", text: "Foto " + i + ":" });
+    content.push({ type: "image", source: { type: "url", url: pexelsImageUrl(c.base, 800) } });
+  });
+  content.push({
+    type: "text",
+    text:
+      "Das sind " + candidates.length + " Kandidaten (Foto 0 bis " + (candidates.length - 1) + ") " +
+      "für das „Tier des Tages“ auf einer Gute-Laune-Website. Gesucht: " + animal.name + ".\n" +
+      "Ein Foto ist nur geeignet, wenn ALLES zutrifft:\n" +
+      "- Hauptmotiv ist eindeutig ein Tierbaby bzw. Jungtier (nicht nur ein ausgewachsenes Tier) und es ist richtig süß\n" +
+      "- scharf, gut belichtet, schön fotografiert; das Tier ist gut zu sehen und nicht angeschnitten\n" +
+      "- keine Menschen im Vordergrund, kein Spielzeug, keine Grafik oder Illustration\n" +
+      "- nichts Trauriges oder Beunruhigendes (Käfig, Verletzung, Jagd)\n" +
+      "Wähle das schönste geeignete Foto und schreibe dazu einen einzigen kurzen, warmherzigen " +
+      "deutschen Spruch (höchstens 15 Wörter), der zu diesem Foto passt.\n" +
+      'Antworte NUR mit JSON: {"index": <Nummer des Fotos oder -1, wenn keines geeignet ist>, "quote": "<Spruch>"}',
+  });
+  const text = await callClaude(content, 200);
+  const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  const index =
+    Number.isInteger(json.index) && json.index >= 0 && json.index < candidates.length ? json.index : -1;
+  return { index, quote: typeof json.quote === "string" ? cleanQuote(json.quote) : "" };
+}
+
+// Nur-Text-Zitat, falls die Bildprüfung selbst nicht geklappt hat
+async function generateQuote(animalDescription) {
+  const text = await callClaude(
+    "Schreibe ein einziges kurzes, warmherziges deutsches Zitat oder einen " +
+      "aufmunternden Spruch (höchstens 15 Wörter), der zu einem Foto von diesem " +
+      "Tier passt: " + animalDescription + ". Antworte NUR mit dem Spruch – " +
+      "ohne Anführungszeichen, ohne Einleitung, ohne Erklärung.",
+    100
+  );
+  return cleanQuote(text);
+}
+
+// Sucht das Foto des Tages. Innerhalb einer Tierart rückt das Kandidaten-
+// Fenster mit jeder Runde durch die Liste weiter, damit dieselbe Art beim
+// nächsten Mal ein anderes Foto zeigt. Lehnt Claude alle Kandidaten ab, kommt
+// das nächste Fenster bzw. die nächste Tierart dran.
+async function findDailyPhoto(day) {
+  const count = BABY_ANIMALS.length;
+  const round = Math.floor(day / count);
+  let reviews = 0;
+  for (let offset = 0; offset < 3; offset++) {
+    const animal = BABY_ANIMALS[(day + offset) % count];
+    const candidates = await searchBabyPhotos(animal);
+    const windows = Math.ceil(candidates.length / CANDIDATES_PER_REVIEW);
+    for (let w = 0; w < Math.min(windows, 2); w++) {
+      const start = ((round + w) % windows) * CANDIDATES_PER_REVIEW;
+      const group = candidates.slice(start, start + CANDIDATES_PER_REVIEW);
+      // Ohne Claude: bestes vorgefiltertes Foto (Pexels sortiert nach Relevanz)
+      if (!hasClaudeKey()) return { photo: group[0], animal, quote: "" };
+      if (reviews === MAX_REVIEWS_PER_DAY) throw new Error("Kein geeignetes Foto gefunden");
+      reviews++;
+      let verdict;
+      try {
+        verdict = await reviewWithClaude(animal, group);
+      } catch {
+        // Claude nicht erreichbar → vorgefiltertes Foto, Zitat kommt separat
+        return { photo: group[0], animal, quote: "" };
+      }
+      if (verdict.index >= 0) return { photo: group[verdict.index], animal, quote: verdict.quote };
+    }
+  }
+  throw new Error("Kein geeignetes Foto gefunden");
 }
 
 function showImageLoading() {
@@ -195,25 +337,23 @@ function showImageLoading() {
   placeholder.textContent = "🐾";
 }
 
-function showPhotoCredit(name, url) {
+function creditLink(text, href) {
+  if (!href) return text;
+  const a = document.createElement("a");
+  a.href = href;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.textContent = text;
+  return a;
+}
+
+// "Foto: Name / Pexels" – der Pexels-Link führt zur Seite des Fotos
+function showPhotoCredit(photographer, photographerUrl, pageUrl) {
   const el = document.getElementById("photo-credit");
-  if (!name) {
-    el.hidden = true;
-    return;
-  }
   el.innerHTML = "";
   el.append("Foto: ");
-  if (url) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = name;
-    el.appendChild(a);
-  } else {
-    el.append(name);
-  }
-  el.append(" / Pexels");
+  if (photographer) el.append(creditLink(photographer, photographerUrl), " / ");
+  el.append(creditLink("Pexels", pageUrl || "https://www.pexels.com"));
   el.hidden = false;
 }
 
@@ -228,77 +368,65 @@ function setHeroNote(msg) {
 }
 
 function renderDaily(entry) {
-  const img = document.getElementById("animal-image");
-  const placeholder = document.getElementById("image-placeholder");
-  img.onload = () => {
-    img.hidden = false;
-    placeholder.hidden = true;
-  };
-  img.onerror = () => {
-    img.hidden = true;
-    placeholder.hidden = false;
-    placeholder.textContent = "🐾";
-  };
-  img.alt = entry.alt || "Tier des Tages";
-  img.src = entry.imageUrl;
-  currentAnimalAlt = entry.alt || null;
   setQuote(entry.quote, "");
-  showPhotoCredit(entry.photographer, entry.photographerUrl);
+  showPhotoCredit(entry.photographer, entry.photographerUrl, entry.pageUrl);
   setHeroNote("");
+  // Foto nicht (mehr) abrufbar → eines aus der festen Liste, Zitat bleibt
+  showPhoto(entry.imageBase, entry.alt || "Tier des Tages").catch(loadCuratedPhoto);
 }
 
-// Sanfter Rückfall auf die freien Bild-APIs + kuratierte Zitate
-function fallbackToFreeAnimal(note) {
+// Sanfter Rückfall auf die feste Fotoliste + kuratierte Zitate
+function fallbackToCuratedAnimal(note) {
   document.getElementById("hero-heading").textContent = "🐾 Dein Tiermoment";
-  document.getElementById("photo-credit").hidden = true;
-  currentAnimalAlt = null;
   showRandomQuote();
-  loadAnimalImage();
+  loadCuratedPhoto();
   setHeroNote(note || "");
 }
 
 async function initDailyAnimal() {
   const dateKey = todayKey();
   const cached = readDailyCache(dateKey);
-  if (cached && cached.imageUrl) {
+  if (cached) {
     renderDaily(cached);
     return;
   }
 
-  if (!hasConfig()) {
-    // Keine Schlüssel hinterlegt → freie APIs + kuratierte Zitate (still)
-    fallbackToFreeAnimal();
+  if (!hasPexelsKey()) {
+    // Kein Pexels-Schlüssel hinterlegt → feste Fotoliste + kuratierte Zitate (still)
+    fallbackToCuratedAnimal();
     return;
   }
 
   showImageLoading();
   showQuoteLoading("Dein Tier des Tages wird geladen …");
   try {
-    const doy = dayOfYear(new Date());
-    const term = SEARCH_TERMS[doy % SEARCH_TERMS.length];
-    const photo = await fetchDailyPhoto(term, doy);
+    const { photo, animal, quote: reviewedQuote } = await findDailyPhoto(dayNumber(new Date()));
 
-    let quote;
-    try {
-      quote = await generateQuote(photo.alt);
-    } catch {
-      // Claude nicht erreichbar → kuratiertes Zitat als Ersatz
-      quote = randomCuratedQuote().text;
+    let quote = reviewedQuote;
+    if (!quote && hasClaudeKey()) {
+      try {
+        quote = await generateQuote(animal.name + " – " + photo.alt);
+      } catch {
+        // Claude nicht erreichbar → kuratiertes Zitat
+      }
     }
+    if (!quote) quote = randomCuratedQuote().text;
 
     const entry = {
+      v: CACHE_VERSION,
       date: dateKey,
-      imageUrl: photo.imageUrl,
+      imageBase: photo.base,
       alt: photo.alt,
       photographer: photo.photographer,
       photographerUrl: photo.photographerUrl,
+      pageUrl: photo.pageUrl,
       quote,
     };
     writeDailyCache(dateKey, entry);
     renderDaily(entry);
   } catch {
-    // Pexels nicht erreichbar → freundlicher Rückfall
-    fallbackToFreeAnimal("🌼 Das Tier des Tages ruht gerade – hier ein Gruß aus unserem Vorrat.");
+    // Pexels nicht erreichbar oder nichts Passendes → freundlicher Rückfall
+    fallbackToCuratedAnimal("🌼 Das Tier des Tages ruht gerade – hier ein Gruß aus unserem Vorrat.");
   }
 }
 

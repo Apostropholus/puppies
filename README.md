@@ -8,17 +8,32 @@ und ein Dankbarkeits-Fenster, dessen Text als Sternschnuppe davonfliegt
 (nichts wird gespeichert).
 
 **Technik:** Reines HTML/CSS/JS – kein Backend, kein Login, kein Tracking,
-keine Speicherung von Nutzerdaten (außer dem Tier-des-Tages-Cache im
-`localStorage` des eigenen Browsers).
+keine Speicherung von Nutzerdaten (außer dem Tier-des-Tages-Cache und der
+zuletzt gezeigten Tierart im `localStorage` des eigenen Browsers).
 
 ## Tier des Tages (optional, mit API-Schlüsseln)
 
-Das Hero-Bild kann pro Tag **ein** Babytier-Foto von [Pexels](https://www.pexels.com/api/)
-zeigen und dazu ein **von Claude** (`claude-sonnet-4-6`) frisch geschriebenes
-Zitat. Das Foto ist an einem Tag für alle Besucher:innen gleich (der Tag im
-Jahr bestimmt Suchbegriff und Auswahl) und wechselt um Mitternacht. Ergebnis
-wird im `localStorage` zwischengespeichert, damit ein erneutes Laden am selben
-Tag keine weiteren API-Aufrufe kostet.
+Das Hero-Bild zeigt pro Tag **ein** Tierbaby-Foto von [Pexels](https://www.pexels.com/api/)
+und dazu ein **von Claude** (`claude-sonnet-4-6`) frisch geschriebenes Zitat.
+Das Foto ist an einem Tag für alle Besucher:innen gleich und wechselt um
+Mitternacht. Ergebnis wird im `localStorage` zwischengespeichert, damit ein
+erneutes Laden am selben Tag keine weiteren API-Aufrufe kostet.
+
+**So kommt ein gutes Foto zustande:**
+
+1. **Ausgewogen:** Die Tierart wechselt täglich reihum durch die Liste
+   `BABY_ANIMALS` (47 Arten: Haustiere, Hoftiere, Wald, Savanne, Polar, Meer,
+   Vögel, …). Jede Art kommt gleich oft dran, egal wie viele Fotos es gibt.
+2. **Vorfilter:** Pexels liefert bis zu 80 Treffer. Durch kommen nur Fotos in
+   hoher Auflösung (mind. 2400 px breit), im Querformat, deren Beschreibung
+   die Tierart **und** ein Baby-Wort (baby, cub, kitten, foal, …) enthält und
+   keine Menschen, Spielzeug, Grafiken, Schwarzweiß oder Trauriges.
+3. **Bildprüfung durch Claude:** Claude sieht sich bis zu 6 Kandidaten an und
+   wählt das schönste Foto, das wirklich ein süßes Tierbaby zeigt (scharf, gut
+   belichtet, Tier gut zu sehen). Taugt keines, kommen weitere Kandidaten bzw.
+   die nächste Tierart dran (höchstens 3 Prüfungen pro Tag).
+4. **Scharf auf jedem Bildschirm:** Das Foto wird in passender Größe geladen
+   (640–1920 px, `srcset`) statt wie früher fest mit 940 px.
 
 **Einrichten:**
 
@@ -27,10 +42,15 @@ Tag keine weiteren API-Aufrufe kostet.
    [console.anthropic.com](https://console.anthropic.com/)).
 3. Seite neu laden.
 
-**Ohne `config.js` funktioniert die Seite ganz normal weiter** – sie fällt
-dann automatisch auf die kostenlosen, schlüssellosen Tierbild-APIs und die
-kuratierten Zitate zurück (siehe unten). Auch wenn eine der APIs mal nicht
-antwortet, greift dieser freundliche Rückfall.
+Der Pexels-Schlüssel reicht schon für das Tier des Tages (dann ohne
+Bildprüfung und mit kuratiertem Zitat); mit Anthropic-Schlüssel kommt die
+Bildprüfung durch Claude dazu. Kosten: ein Pexels-Aufruf und ein Claude-Aufruf
+pro Tag (in seltenen Fällen bis zu drei).
+
+**Ohne `config.js` funktioniert die Seite ganz normal weiter** – sie zeigt
+dann bei jedem Aufruf ein zufälliges Foto aus der festen Fotoliste (siehe
+unten) und ein kuratiertes Zitat. Auch wenn Pexels mal nicht antwortet oder
+kein passendes Foto findet, greift dieser freundliche Rückfall.
 
 ### ⚠️ Sicherheit & Deployment (bitte lesen!)
 
@@ -40,7 +60,7 @@ zwei praktische Folgen:
 
 - **`config.js` steht in `.gitignore`** und wird nicht eingecheckt. Auf einem
   öffentlichen Hosting wie **GitHub Pages** liegt sie deshalb **nicht** vor –
-  dort läuft die Seite im kostenlosen Fallback-Modus (freie Bild-APIs +
+  dort läuft die Seite im kostenlosen Fallback-Modus (feste Fotoliste +
   kuratierte Zitate). Das ist Absicht: So gelangen deine Schlüssel nicht
   versehentlich an die Öffentlichkeit.
 - Würdest du `config.js` doch einchecken, um das Feature online zu schalten,
@@ -70,8 +90,8 @@ Alle Texte liegen in **`js/data.js`** – einfach die Datei in einem Editor
 öffnen, ändern, speichern, fertig.
 
 **Wichtig nach jeder Änderung an CSS/JS:** In `index.html` den
-`?v=…`-Parameter an den Einbindungen (`style.css?v=10`, `config.js?v=10`,
-`data.js?v=10`, `app.js?v=10`) um eins hochzählen. Das zwingt Browser, die
+`?v=…`-Parameter an den Einbindungen (`style.css?v=11`, `config.js?v=11`,
+`data.js?v=11`, `app.js?v=11`) um eins hochzählen. Das zwingt Browser, die
 geänderten Dateien neu zu laden, statt eine alte Version aus dem Cache zu
 verwenden.
 
@@ -126,34 +146,28 @@ ZDF, Reuters, dpa) und das Medium in `source` angeben.
 > tagesaktuelle Schlagzeilen bräuchte es eine Nachrichten-API bzw. ein
 > Backend, das die `NEWS_SETS` regelmäßig neu befüllt (z.B. per GitHub Action).
 
-### Tier des Tages: Suchbegriffe ändern
+### Tierarten & feste Fotoliste ändern
 
-Welche Tiere Pexels sucht, steht in **`js/data.js`** in der Liste
-`SEARCH_TERMS`. Die Begriffe werden nach dem Tag im Jahr durchrotiert – einfach
-umsortieren, ergänzen oder austauschen (englische Begriffe funktionieren bei
-Pexels am besten).
-
-### Tierbilder-Fallback ändern
-
-Ohne API-Schlüssel (oder wenn Pexels ausfällt) kommen die Bilder von
-kostenlosen, schlüssellosen APIs. Die Quellen stehen in **`js/app.js`** in der
-Liste `IMAGE_SOURCES` (aktuell: Hunde von
-[dog.ceo](https://dog.ceo/dog-api/), Füchse von
-[randomfox.ca](https://randomfox.ca), Katzen von
-[cataas.com](https://cataas.com)). Es wird zufällig eine
-Quelle gewählt; fällt sie aus, springt die nächste ein. Eine neue Quelle
-ergänzt du als weiteren Eintrag nach demselben Muster:
+Alle Tierarten stehen in **`js/data.js`** in der Liste `BABY_ANIMALS`, eine
+Art pro Zeile:
 
 ```js
-{
-  name: "Meine Quelle",
-  async getUrl() {
-    const res = await fetch("https://beispiel-api.de/random");
-    const data = await res.json();
-    return data.url;   // muss eine direkte Bild-URL zurückgeben
-  },
-},
+{ name: "Fuchswelpe", query: "fox cub", words: ["fox"], photos: [10673284, 20407336] },
 ```
+
+- `name` – deutscher Anzeigename (geht auch an Claude)
+- `query` – Pexels-Suchbegriff (englisch funktioniert am besten)
+- `words` – mindestens eines dieser Wörter muss in der Fotobeschreibung stehen
+- `photos` – Pexels-Foto-IDs für den Betrieb **ohne** Schlüssel: die Zahl am
+  Ende der Pexels-Adresse (`pexels.com/photo/…-10673284/`). Darf leer bleiben.
+
+Die Reihenfolge ist bunt gemischt, damit nicht zwei ähnliche Tiere
+hintereinander kommen. Ohne Schlüssel wird zuerst zufällig eine Art gewählt
+(nie zweimal dieselbe hintereinander) und dann eines ihrer Fotos – so ist
+jede Art gleich oft zu sehen. Lädt ein Foto nicht (z.B. bei Pexels
+gelöscht), springt automatisch eine andere Art ein. Gefällt dir ein Foto
+nicht, lösche einfach seine ID; ein schönes Foto auf pexels.com fügst du über
+seine ID hinzu.
 
 ### Farben & Design anpassen
 
@@ -166,7 +180,7 @@ die ganze Seite aus.
 ```
 index.html          – Aufbau der Seite
 css/style.css       – Design (Farben, Layout, Animationen)
-js/data.js          – ✏️ Zitate, News, Komplimente & Pexels-Suchbegriffe
+js/data.js          – ✏️ Zitate, News, Komplimente & Tierarten/Fotoliste
 js/app.js           – Logik (Tier des Tages, Atemübung, Folie, …)
 config.template.js  – Vorlage für die API-Schlüssel
 config.js           – deine echten Schlüssel (NICHT eingecheckt, in .gitignore)
